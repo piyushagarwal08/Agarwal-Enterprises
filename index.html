@@ -54,10 +54,12 @@
             padding: 0 1rem 1rem;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
         }
 
         .search-box {
             flex: 1;
+            min-width: 200px;
             padding: 10px 14px;
             border: 1px solid var(--border);
             border-radius: 8px;
@@ -78,6 +80,16 @@
 
         .admin-btn:hover {
             background: var(--dark-green);
+        }
+
+        .admin-btn.logout {
+            background: #EF4444;
+            font-size: 12px;
+            padding: 6px 10px;
+        }
+
+        .admin-btn.logout:hover {
+            background: #DC2626;
         }
 
         .categories { 
@@ -152,14 +164,16 @@
             font-size: 12px;
         }
 
-        .mrp {
-            color: var(--text-secondary);
-            text-decoration: line-through;
+        .cost-badge {
+            background: var(--pale-green);
+            color: var(--dark-green);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
         }
 
-        .profit {
-            color: var(--primary-green);
-            font-weight: 600;
+        .stock-badge {
+            color: var(--text-secondary);
         }
 
         .product-footer { 
@@ -189,6 +203,11 @@
 
         .add-btn:active {
             background: var(--dark-green);
+        }
+
+        .add-btn:disabled {
+            background: #CCC;
+            cursor: not-allowed;
         }
 
         .cart-fab { 
@@ -403,7 +422,7 @@
             text-align: center; 
         }
 
-        /* Admin Modal Styles */
+        /* Modal Styles */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -422,7 +441,7 @@
             background: white;
             border-radius: 12px;
             padding: 2rem;
-            max-width: 600px;
+            max-width: 500px;
             width: 100%;
             max-height: 90vh;
             overflow-y: auto;
@@ -449,6 +468,46 @@
             color: var(--text-secondary);
         }
 
+        .password-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+
+        .form-group input {
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .form-group button {
+            padding: 10px;
+            background: var(--primary-green);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .form-group button:hover {
+            background: var(--dark-green);
+        }
+
         .upload-section {
             margin-bottom: 1.5rem;
         }
@@ -468,23 +527,11 @@
             cursor: pointer;
         }
 
-        .btn-upload {
-            width: 100%;
-            padding: 12px;
-            background: var(--primary-green);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 1rem;
-        }
-
         .price-table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 1rem;
-            font-size: 13px;
+            font-size: 12px;
         }
 
         .price-table th {
@@ -498,13 +545,6 @@
         .price-table td {
             padding: 8px;
             border: 1px solid var(--light-green);
-        }
-
-        .price-input {
-            width: 80px;
-            padding: 6px;
-            border: 1px solid var(--border);
-            border-radius: 4px;
         }
 
         .no-results {
@@ -526,6 +566,10 @@
             .modal-content {
                 padding: 1.5rem;
             }
+
+            .header h1 {
+                font-size: 24px;
+            }
         }
     </style>
 </head>
@@ -540,14 +584,18 @@
             const [showCart, setShowCart] = React.useState(false);
             const [showAdmin, setShowAdmin] = React.useState(false);
             const [products, setProducts] = React.useState([]);
-            const [categories, setCategories] = React.useState([]);
+            const [categories, setCategories] = React.useState(['All']);
             const [searchTerm, setSearchTerm] = React.useState('');
             const [loading, setLoading] = React.useState(true);
+            const [isAdminLoggedIn, setIsAdminLoggedIn] = React.useState(false);
+            const [adminPassword, setAdminPassword] = React.useState('');
+            const [showPasswordPrompt, setShowPasswordPrompt] = React.useState(false);
 
-            // Load products data
+            // ⚠️ CHANGE THIS PASSWORD TO YOUR OWN!
+            const ADMIN_PASSWORD = 'Anjali@4321';
+
             React.useEffect(() => {
                 const loadProducts = () => {
-                    // Sample products with green markup
                     const sampleProducts = [
                         { id: 1, name: 'PAT NUTRELA ORG OMEGA 3 6 7 9', category: 'Patanjali Nutrela', mrp: 551, cost: 385.70, profit_margin: 30, stock: 55 },
                         { id: 2, name: 'PAPAD KALI MIRCH - T', category: 'PAPAD', mrp: 55, cost: 38.50, profit_margin: 30, stock: 16 },
@@ -561,7 +609,6 @@
                         { id: 10, name: 'KALA NAMAK 200 GM - T', category: 'NAMAK', mrp: 15, cost: 10.50, profit_margin: 30, stock: 112 },
                     ];
 
-                    // Load from localStorage if available
                     const savedProducts = localStorage.getItem('agarwal_products');
                     if (savedProducts) {
                         const parsed = JSON.parse(savedProducts);
@@ -576,6 +623,34 @@
 
                 loadProducts();
             }, []);
+
+            const handleAdminClick = () => {
+                if (isAdminLoggedIn) {
+                    setShowAdmin(true);
+                } else {
+                    setShowPasswordPrompt(true);
+                }
+            };
+
+            const handlePasswordSubmit = (e) => {
+                e.preventDefault();
+                if (adminPassword === ADMIN_PASSWORD) {
+                    setIsAdminLoggedIn(true);
+                    setShowAdmin(true);
+                    setShowPasswordPrompt(false);
+                    setAdminPassword('');
+                    alert('✅ Welcome! Admin panel unlocked.');
+                } else {
+                    alert('❌ Incorrect password. Try again!');
+                    setAdminPassword('');
+                }
+            };
+
+            const handleAdminLogout = () => {
+                setIsAdminLoggedIn(false);
+                setShowAdmin(false);
+                setAdminPassword('');
+            };
 
             const filteredProducts = React.useMemo(() => {
                 return products.filter(product => {
@@ -631,15 +706,19 @@
                 Papa.parse(file, {
                     header: true,
                     complete: (results) => {
+                        let updatedCount = 0;
                         const updatedProducts = products.map(product => {
                             const csvRow = results.data.find(row => 
                                 row.name && row.name.trim().toLowerCase() === product.name.toLowerCase()
                             );
-                            if (csvRow && csvRow.mrp) {
+                            if (csvRow && (csvRow.mrp || csvRow.stock)) {
+                                updatedCount++;
                                 return {
                                     ...product,
-                                    mrp: parseFloat(csvRow.mrp),
-                                    cost: csvRow.cost ? parseFloat(csvRow.cost) : product.cost
+                                    mrp: csvRow.mrp ? parseFloat(csvRow.mrp) : product.mrp,
+                                    cost: csvRow.cost ? parseFloat(csvRow.cost) : product.cost,
+                                    stock: csvRow.stock ? parseInt(csvRow.stock) : product.stock,
+                                    profit_margin: csvRow.profit_margin ? parseFloat(csvRow.profit_margin) : product.profit_margin
                                 };
                             }
                             return product;
@@ -649,7 +728,7 @@
                             products: updatedProducts,
                             categories: categories.filter(c => c !== 'All')
                         }));
-                        alert('✅ Prices updated successfully!');
+                        alert(`✅ Updated ${updatedCount} products!\n\nPrices & Stock Quantities Updated Successfully!`);
                         setShowAdmin(false);
                     },
                     error: (err) => {
@@ -673,58 +752,68 @@
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
-                        <button className="admin-btn" onClick={() => setShowAdmin(true)}>
-                            ⚙️ Update Prices
-                        </button>
-                    </div>
-
-                    <div className="categories">
-                        {categories.map(cat => (
-                            <button
-                                key={cat}
-                                className={`category-btn ${selectedCategory === cat ? 'active' : ''}`}
-                                onClick={() => {
-                                    setSelectedCategory(cat);
-                                    setSearchTerm('');
-                                }}
-                            >
-                                {cat === 'All' ? '📋 All' : cat}
+                        {isAdminLoggedIn && (
+                            <button className="admin-btn" onClick={handleAdminClick}>
+                                ⚙️ Update Prices
                             </button>
-                        ))}
-                    </div>
-
-                    <div className="products-container">
-                        {loading ? (
-                            <div className="no-results">Loading products...</div>
-                        ) : filteredProducts.length === 0 ? (
-                            <div className="no-results">
-                                <p>No products found matching your search.</p>
-                            </div>
-                        ) : (
-                            <div className="products-grid">
-                                {filteredProducts.map(product => (
-                                    <div key={product.id} className="product-card">
-                                        <h3>{product.name}</h3>
-                                        <p>Stock: {product.stock} units</p>
-                                        <div className="price-info">
-                                            <span className="mrp">₹{product.mrp}</span>
-                                            <span className="profit">{product.profit_margin}% OFF</span>
-                                        </div>
-                                        <div className="product-footer">
-                                            <p className="product-price">₹{product.mrp}</p>
-                                            <button 
-                                                className="add-btn" 
-                                                onClick={() => addToCart(product)}
-                                                disabled={product.stock === 0}
-                                            >
-                                                Add +
-                                            </button>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
+                        )}
+                        {isAdminLoggedIn && (
+                            <button className="admin-btn logout" onClick={handleAdminLogout}>
+                                Logout
+                            </button>
                         )}
                     </div>
+
+                    {loading ? (
+                        <div className="no-results">Loading products...</div>
+                    ) : (
+                        <>
+                            <div className="categories">
+                                {categories.map(cat => (
+                                    <button
+                                        key={cat}
+                                        className={`category-btn ${selectedCategory === cat ? 'active' : ''}`}
+                                        onClick={() => {
+                                            setSelectedCategory(cat);
+                                            setSearchTerm('');
+                                        }}
+                                    >
+                                        {cat === 'All' ? '📋 All' : cat}
+                                    </button>
+                                ))}
+                            </div>
+
+                            <div className="products-container">
+                                {filteredProducts.length === 0 ? (
+                                    <div className="no-results">
+                                        <p>No products found matching your search.</p>
+                                    </div>
+                                ) : (
+                                    <div className="products-grid">
+                                        {filteredProducts.map(product => (
+                                            <div key={product.id} className="product-card">
+                                                <h3>{product.name}</h3>
+                                                <div className="price-info">
+                                                    <span className="cost-badge">Cost: ₹{product.cost.toFixed(2)}</span>
+                                                    <span className="stock-badge">Stock: {product.stock}</span>
+                                                </div>
+                                                <div className="product-footer">
+                                                    <p className="product-price">₹{product.mrp}</p>
+                                                    <button 
+                                                        className="add-btn" 
+                                                        onClick={() => addToCart(product)}
+                                                        disabled={product.stock === 0}
+                                                    >
+                                                        Add +
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </>
+                    )}
 
                     {cart.length > 0 && (
                         <button className="cart-fab" onClick={() => setShowCart(!showCart)}>
@@ -790,18 +879,49 @@
                         </div>
                     )}
 
-                    {showAdmin && (
+                    {showPasswordPrompt && (
+                        <div className="modal-overlay" onClick={() => setShowPasswordPrompt(false)}>
+                            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                                <div className="modal-header">
+                                    <h2>🔒 Admin Login</h2>
+                                    <button className="modal-close" onClick={() => setShowPasswordPrompt(false)}>✕</button>
+                                </div>
+
+                                <form onSubmit={handlePasswordSubmit} className="password-form">
+                                    <div className="form-group">
+                                        <label>Admin Password:</label>
+                                        <input
+                                            type="password"
+                                            value={adminPassword}
+                                            onChange={(e) => setAdminPassword(e.target.value)}
+                                            placeholder="Enter your admin password"
+                                            autoFocus
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <button type="submit">Unlock Admin Panel</button>
+                                    </div>
+                                </form>
+
+                                <div style={{ marginTop: '1rem', padding: '1rem', background: var(--pale-green), borderRadius: '8px', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                                    <strong>💡 Tip:</strong> Password is case-sensitive. If you forgot your password, edit the HTML file and change ADMIN_PASSWORD value.
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {showAdmin && isAdminLoggedIn && (
                         <div className="modal-overlay" onClick={() => setShowAdmin(false)}>
                             <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                                 <div className="modal-header">
-                                    <h2>Update Daily Prices</h2>
+                                    <h2>Update Prices & Stock</h2>
                                     <button className="modal-close" onClick={() => setShowAdmin(false)}>✕</button>
                                 </div>
 
                                 <div className="upload-section">
-                                    <label>Upload CSV with Price Updates</label>
+                                    <label>Upload CSV with Price & Stock Updates</label>
                                     <p style={{ fontSize: '12px', color: '#6B7280', marginBottom: '8px' }}>
-                                        CSV should have columns: name, mrp, cost
+                                        CSV columns: name, mrp, cost, stock, profit_margin
                                     </p>
                                     <input
                                         type="file"
@@ -813,41 +933,29 @@
 
                                 <div>
                                     <h3 style={{ fontSize: '16px', marginTop: '1.5rem', marginBottom: '1rem', color: 'var(--text-primary)' }}>
-                                        Current Prices ({products.length} products)
+                                        Current Prices & Stock ({products.length} products)
                                     </h3>
                                     <table className="price-table">
                                         <thead>
                                             <tr>
-                                                <th>Product Name</th>
-                                                <th>Category</th>
+                                                <th>Product</th>
                                                 <th>MRP</th>
-                                                <th>Cost</th>
+                                                <th>Stock</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             {products.slice(0, 10).map(product => (
                                                 <tr key={product.id}>
-                                                    <td style={{ fontSize: '12px' }}>{product.name.substring(0, 20)}...</td>
-                                                    <td style={{ fontSize: '12px' }}>{product.category}</td>
+                                                    <td style={{ fontSize: '11px' }}>{product.name.substring(0, 20)}...</td>
                                                     <td>₹{product.mrp}</td>
-                                                    <td>₹{product.cost.toFixed(2)}</td>
+                                                    <td>{product.stock} units</td>
                                                 </tr>
                                             ))}
                                         </tbody>
                                     </table>
                                     <p style={{ fontSize: '12px', color: '#6B7280', marginTop: '1rem', textAlign: 'center' }}>
-                                        Showing first 10 products. Total: {products.length} products
+                                        Showing first 10 of {products.length} products
                                     </p>
-                                </div>
-
-                                <div style={{ marginTop: '1.5rem', padding: '1rem', background: 'var(--pale-green)', borderRadius: '8px', fontSize: '12px', color: 'var(--text-secondary)' }}>
-                                    <strong>📝 How to update prices:</strong>
-                                    <ol style={{ marginTop: '8px', paddingLeft: '20px' }}>
-                                        <li>Create a CSV file with columns: name, mrp, cost</li>
-                                        <li>Upload the file using the button above</li>
-                                        <li>Only products matching names will be updated</li>
-                                        <li>Data is saved locally on your device</li>
-                                    </ol>
                                 </div>
                             </div>
                         </div>
