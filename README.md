@@ -46,14 +46,16 @@ A beautiful, mobile-friendly e-commerce platform with **daily price update syste
 ### Step 1: Create a CSV File
 Create a spreadsheet with these columns:
 ```
-name, mrp, cost, profit_margin
+name, mrp, cost, stock, profit_margin
 ```
 
 Example:
 ```
-PAT NUTRELA ORG OMEGA 3 6 7 9, 551, 385.70, 30
-PAPAD KALI MIRCH - T, 55, 38.50, 30
+PAT NUTRELA ORG OMEGA 3 6 7 9, 551, 385.70, 55, 30
+PAPAD KALI MIRCH - T, 55, 38.50, 16, 30
 ```
+
+**Note:** All columns are optional except `name`. Update only what you need (prices, stock, or both).
 
 ### Step 2: Update on Website
 1. Click **"⚙️ Update Prices"** button on the website

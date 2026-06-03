@@ -72,11 +72,11 @@ https://YOUR_USERNAME.github.io/agarwal-enterprises
 
 ## Daily Price Updates
 
-### Every day, to update prices:
+### Every day, to update prices & stock:
 
-1. **Create CSV file** with new prices:
-   - Excel: Create columns `name`, `mrp`, `cost`
-   - Add your products and prices
+1. **Create CSV file** with new prices and quantities:
+   - Excel: Create columns `name`, `mrp`, `cost`, `stock`, `profit_margin`
+   - Add your products with new prices and stock levels
    - Save as CSV
 
 2. **Open website**
@@ -85,7 +85,7 @@ https://YOUR_USERNAME.github.io/agarwal-enterprises
 
 4. **Upload CSV file**
 
-5. **Done!** Prices updated instantly ✅
+5. **Done!** Prices & stock updated instantly ✅
 
 ---
 
@@ -93,12 +93,12 @@ https://YOUR_USERNAME.github.io/agarwal-enterprises
 
 Create this in Excel/Google Sheets:
 
-| name | mrp | cost | profit_margin |
-|------|-----|------|---------------|
-| CHANA DAL 500 GM | 65 | 45.50 | 30 |
-| TURMERIC POWDER 200 GM | 82 | 57.40 | 30 |
-| RICE BRAN OIL 1L | 180 | 126 | 30 |
-| VERMICELLI 400 GM | 45 | 31.50 | 30 |
+| name | mrp | cost | stock | profit_margin |
+|------|-----|------|-------|---------------|
+| CHANA DAL 500 GM | 68 | 47.60 | 10 | 30 |
+| TURMERIC POWDER 200 GM | 90 | 63 | 20 | 30 |
+| RICE BRAN OIL 1L | 185 | 129.50 | 15 | 30 |
+| VERMICELLI 400 GM | 50 | 35 | 25 | 30 |
 
 ---
 
