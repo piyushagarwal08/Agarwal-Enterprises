@@ -630,6 +630,17 @@
                 };
 
                 loadProducts();
+
+                // KEYBOARD SHORTCUT: Ctrl+Shift+A (Windows) or Cmd+Shift+A (Mac)
+                const handleKeyPress = (e) => {
+                    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'A') {
+                        e.preventDefault();
+                        setShowPasswordPrompt(true);
+                    }
+                };
+                
+                window.addEventListener('keydown', handleKeyPress);
+                return () => window.removeEventListener('keydown', handleKeyPress);
             }, []);
 
             const handleAdminClick = () => {
