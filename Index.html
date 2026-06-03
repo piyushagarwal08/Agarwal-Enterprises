@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agarwal Enterprises - Menu</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+        .header { background: linear-gradient(135deg, #C17817 0%, #D4942D 100%); color: white; padding: 1.5rem; margin-bottom: 1rem; }
+        .header h1 { font-size: 28px; font-weight: 600; margin-bottom: 0.5rem; }
+        .header p { font-size: 14px; opacity: 0.9; }
+        .categories { display: flex; gap: 8px; padding: 0 1rem 1rem; overflow-x: auto; scroll-behavior: smooth; }
+        .category-btn { padding: 8px 16px; border: none; border-radius: 20px; background: white; color: #666; font-weight: 500; font-size: 14px; cursor: pointer; white-space: nowrap; transition: all 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .category-btn.active { background: #C17817; color: white; box-shadow: 0 2px 8px rgba(193, 120, 23, 0.3); }
+        .products-container { padding: 0 1rem 6rem; }
+        .products-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .product-card { background: white; border-radius: 12px; padding: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+        .product-card h3 { font-size: 14px; font-weight: 600; color: #222; margin-bottom: 4px; }
+        .product-card p { font-size: 12px; color: #888; margin-bottom: 8px; }
+        .product-footer { display: flex; justify-content: space-between; align-items: center; }
+        .product-price { font-size: 16px; font-weight: 600; color: #C17817; margin: 0; }
+        .add-btn { padding: 6px 12px; background: #D4942D; color: white; border: none; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; transition: background 0.2s; }
+        .cart-fab { position: fixed; bottom: 1rem; right: 1rem; width: 56px; height: 56px; border-radius: 50%; background: #C17817; color: white; border: none; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; box-shadow: 0 4px 12px rgba(193, 120, 23, 0.4); z-index: 10; }
+        .cart-badge { position: absolute; top: -8px; right: -8px; background: #FF6B6B; color: white; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; }
+        .cart-panel { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top-left-radius: 20px; border-top-right-radius: 20px; box-shadow: 0 -4px 20px rgba(0,0,0,0.15); z-index: 20; max-height: 80vh; overflow-y: auto; animation: slideUp 0.3s ease-out; }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .cart-header { padding: 1.5rem 1rem 1rem; border-bottom: 1px solid #EEE; display: flex; justify-content: space-between; align-items: center; }
+        .cart-header h2 { margin: 0; font-size: 18px; font-weight: 600; }
+        .close-btn { background: none; border: none; cursor: pointer; font-size: 20px; }
+        .cart-content { padding: 1rem; }
+        .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #F0F0F0; }
+        .item-details h4 { margin: 0 0 4px; font-weight: 500; font-size: 14px; }
+        .item-details p { margin: 0; font-size: 12px; color: #888; }
+        .qty-controls { display: flex; align-items: center; gap: 8px; }
+        .qty-btn { width: 28px; height: 28px; border: 1px solid #DDD; background: white; border-radius: 4px; cursor: pointer; font-size: 14px; }
+        .qty-display { min-width: 24px; text-align: center; font-weight: 500; }
+        .item-price { font-weight: 600; min-width: 60px; text-align: right; font-size: 14px; }
+        .address-section { padding: 1rem; border-top: 1px solid #EEE; }
+        .address-label { display: block; font-size: 12px; font-weight: 600; color: #666; margin-bottom: 6px; }
+        .address-input { width: 100%; padding: 10px; border: 1px solid #DDD; border-radius: 8px; font-size: 13px; min-height: 70px; resize: none; font-family: inherit; }
+        .footer { padding: 1rem; background: #F9F5F0; border-top: 1px solid #EEE; }
+        .total-line { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 14px; }
+        .footer-note { margin: 8px 0 0; font-size: 11px; color: #888; }
+        .whatsapp-btn { width: 100%; padding: 12px; background: #25D366; color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; margin-top: 12px; transition: opacity 0.2s; }
+        .whatsapp-btn:disabled { background: #CCC; cursor: not-allowed; }
+        .empty-cart { padding: 2rem 1rem; color: #888; text-align: center; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const App = () => {
+            const [selectedCategory, setSelectedCategory] = React.useState('Groceries');
+            const [cart, setCart] = React.useState([]);
+            const [address, setAddress] = React.useState('');
+            const [showCart, setShowCart] = React.useState(false);
+
+            const products = {
+                'Groceries': [
+                    { id: 1, name: 'Soyabean Oil', price: 120, desc: '1L' },
+                    { id: 2, name: 'Mixed Pickle', price: 55, desc: '500g' },
+                    { id: 3, name: 'Basmati Rice', price: 180, desc: '1kg' },
+                    { id: 4, name: 'Wheat Flour', price: 45, desc: '1kg' },
+                    { id: 5, name: 'Turmeric Powder', price: 80, desc: '100g' },
+                    { id: 6, name: 'Chilli Powder', price: 75, desc: '100g' },
+                ],
+                'Beauty Products': [
+                    { id: 7, name: 'Amla Aloe Vera Juice', price: 86, desc: '500ml' },
+                    { id: 8, name: 'Coconut Oil', price: 95, desc: '200ml' },
+                    { id: 9, name: 'Neem Soap', price: 35, desc: '100g' },
+                    { id: 10, name: 'Shea Butter', price: 120, desc: '200g' },
+                ],
+                'Cleaning': [
+                    { id: 11, name: 'Dish Wash Liquid', price: 65, desc: '500ml' },
+                    { id: 12, name: 'Floor Cleaner', price: 45, desc: '1L' },
+                    { id: 13, name: 'Toilet Cleaner', price: 55, desc: '500ml' },
+                    { id: 14, name: 'All Purpose Cleaner', price: 70, desc: '500ml' },
+                ],
+                'Medicines': [
+                    { id: 15, name: 'Multivitamin Tablets', price: 150, desc: '60 tablets' },
+                    { id: 16, name: 'Vitamin C', price: 120, desc: '100 tablets' },
+                    { id: 17, name: 'Calcium Supplement', price: 140, desc: '60 tablets' },
+                    { id: 18, name: 'Iron Supplement', price: 130, desc: '50 tablets' },
+                ],
+            };
+
+            const categories = ['Groceries', 'Beauty Products', 'Cleaning', 'Medicines'];
+
+            const addToCart = (product) => {
+                const existing = cart.find(item => item.id === product.id);
+                if (existing) {
+                    setCart(cart.map(item =>
+                        item.id === product.id ? { ...item, qty: item.qty + 1 } : item
+                    ));
+                } else {
+                    setCart([...cart, { ...product, qty: 1 }]);
+                }
+            };
+
+            const removeFromCart = (id) => {
+                setCart(cart.filter(item => item.id !== id));
+            };
+
+            const updateQty = (id, qty) => {
+                if (qty <= 0) {
+                    removeFromCart(id);
+                } else {
+                    setCart(cart.map(item =>
+                        item.id === id ? { ...item, qty } : item
+                    ));
+                }
+            };
+
+            const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+
+            const generateWhatsAppMessage = () => {
+                let message = `*Order from Agarwal Enterprises*\n\n`;
+                cart.forEach(item => {
+                    message += `${item.name} - ₹${item.price} x ${item.qty} = ₹${item.price * item.qty}\n`;
+                });
+                message += `\n*Total: ₹${total}*\n`;
+                if (address) message += `\n*Delivery Address:*\n${address}`;
+                const encoded = encodeURIComponent(message);
+                window.open(`https://wa.me/919057529646?text=${encoded}`, '_blank');
+            };
+
+            return (
+                <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #FFF8F0 0%, #FFF5E6 100%)' }}>
+                    <div className="header">
+                        <h1>🛍 Agarwal Enterprises</h1>
+                        <p>Fresh Groceries & Essentials at your doorstep</p>
+                    </div>
+
+                    <div className="categories">
+                        {categories.map(cat => (
+                            <button
+                                key={cat}
+                                className={`category-btn ${selectedCategory === cat ? 'active' : ''}`}
+                                onClick={() => setSelectedCategory(cat)}
+                            >
+                                {cat}
+                            </button>
+                        ))}
+                    </div>
+
+                    <div className="products-container">
+                        <div className="products-grid">
+                            {products[selectedCategory]?.map(product => (
+                                <div key={product.id} className="product-card">
+                                    <h3>{product.name}</h3>
+                                    <p>{product.desc}</p>
+                                    <div className="product-footer">
+                                        <p className="product-price">₹{product.price}</p>
+                                        <button className="add-btn" onClick={() => addToCart(product)}>Add +</button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {cart.length > 0 && (
+                        <button className="cart-fab" onClick={() => setShowCart(!showCart)}>
+                            🛒
+                            <span className="cart-badge">{cart.length}</span>
+                        </button>
+                    )}
+
+                    {showCart && (
+                        <div className="cart-panel">
+                            <div className="cart-header">
+                                <h2>Your Order</h2>
+                                <button className="close-btn" onClick={() => setShowCart(false)}>✕</button>
+                            </div>
+
+                            {cart.length === 0 ? (
+                                <p className="empty-cart">Cart is empty</p>
+                            ) : (
+                                <>
+                                    <div className="cart-content">
+                                        {cart.map(item => (
+                                            <div key={item.id} className="cart-item">
+                                                <div className="item-details">
+                                                    <h4>{item.name}</h4>
+                                                    <p>₹{item.price} each</p>
+                                                </div>
+                                                <div className="qty-controls">
+                                                    <button className="qty-btn" onClick={() => updateQty(item.id, item.qty - 1)}>−</button>
+                                                    <span className="qty-display">{item.qty}</span>
+                                                    <button className="qty-btn" onClick={() => updateQty(item.id, item.qty + 1)}>+</button>
+                                                    <p className="item-price">₹{item.price * item.qty}</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    <div className="address-section">
+                                        <label className="address-label">Delivery Address</label>
+                                        <textarea
+                                            className="address-input"
+                                            value={address}
+                                            onChange={(e) => setAddress(e.target.value)}
+                                            placeholder="Enter your full address..."
+                                        />
+                                    </div>
+
+                                    <div className="footer">
+                                        <div className="total-line">
+                                            <span>Subtotal:</span>
+                                            <span>₹{total}</span>
+                                        </div>
+                                        <p className="footer-note">💬 After order, we'll confirm via WhatsApp</p>
+                                        <button
+                                            className="whatsapp-btn"
+                                            onClick={generateWhatsAppMessage}
+                                            disabled={!address}
+                                        >
+                                            📱 Order via WhatsApp
+                                        </button>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
