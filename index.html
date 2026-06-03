@@ -636,11 +636,12 @@
 
                 loadProducts();
 
-                // KEYBOARD SHORTCUT: Ctrl+Alt+A
+                // KEYBOARD SHORTCUT: Alt+A
                 const handleKeyPress = (e) => {
-                    if (e.ctrlKey && e.altKey && (e.key === 'a' || e.key === 'A')) {
+                    if (e.altKey && (e.key === 'a' || e.key === 'A')) {
                         e.preventDefault();
                         setShowPasswordPrompt(true);
+                        console.log('Admin shortcut triggered!');
                     }
                 };
                 
@@ -735,10 +736,12 @@
                             const csvRow = results.data.find(row => 
                                 row.name && row.name.trim().toLowerCase() === product.name.toLowerCase()
                             );
-                            if (csvRow && (csvRow.mrp || csvRow.stock)) {
+                            if (csvRow) {
                                 updatedCount++;
                                 return {
                                     ...product,
+                                    name: csvRow.name ? csvRow.name : product.name,
+                                    category: csvRow.category ? csvRow.category : product.category,
                                     mrp: csvRow.mrp ? parseFloat(csvRow.mrp) : product.mrp,
                                     cost: csvRow.cost ? parseFloat(csvRow.cost) : product.cost,
                                     stock: csvRow.stock ? parseInt(csvRow.stock) : product.stock,
@@ -747,12 +750,19 @@
                             }
                             return product;
                         });
+                        
                         setProducts(updatedProducts);
+                        
+                        // Regenerate categories from updated products
+                        const uniqueCategories = [...new Set(updatedProducts.map(p => p.category || 'Other'))];
+                        setCategories(['All', ...uniqueCategories.sort()]);
+                        setSelectedCategory('All');
+                        
                         localStorage.setItem('agarwal_products', JSON.stringify({
                             products: updatedProducts,
-                            categories: categories.filter(c => c !== 'All')
+                            categories: uniqueCategories.sort()
                         }));
-                        alert(`✅ Updated ${updatedCount} products!`);
+                        alert(`✅ Updated ${updatedCount} products!\n\nCategories also updated from CSV!`);
                         setShowAdmin(false);
                     },
                     error: (err) => {
@@ -928,7 +938,7 @@
                                 </form>
 
                                 <div className="tip-box">
-                                    <strong>💡 Tip:</strong> Shortcut: Ctrl+Alt+A (Windows) or Cmd+Option+A (Mac)
+                                    <strong>💡 Tip:</strong> Keyboard Shortcut: Alt + A
                                 </div>
                             </div>
                         </div>
@@ -945,7 +955,7 @@
                                 <div className="upload-section">
                                     <label>Upload CSV with Price & Stock Updates</label>
                                     <p style={{ fontSize: '12px', color: '#6B7280', marginBottom: '8px' }}>
-                                        CSV columns: name, mrp, cost, stock, profit_margin
+                                        CSV columns: name, category, mrp, cost, stock, profit_margin
                                     </p>
                                     <input
                                         type="file"
