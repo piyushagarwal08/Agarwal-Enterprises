@@ -54,10 +54,12 @@
             padding: 0 1rem 1rem;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
         }
 
         .search-box {
             flex: 1;
+            min-width: 200px;
             padding: 10px 14px;
             border: 1px solid var(--border);
             border-radius: 8px;
@@ -152,14 +154,16 @@
             font-size: 12px;
         }
 
-        .mrp {
-            color: var(--text-secondary);
-            text-decoration: line-through;
+        .cost-badge {
+            background: var(--pale-green);
+            color: var(--dark-green);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
         }
 
-        .profit {
-            color: var(--primary-green);
-            font-weight: 600;
+        .stock-badge {
+            color: var(--text-secondary);
         }
 
         .product-footer { 
@@ -189,6 +193,11 @@
 
         .add-btn:active {
             background: var(--dark-green);
+        }
+
+        .add-btn:disabled {
+            background: #CCC;
+            cursor: not-allowed;
         }
 
         .cart-fab { 
@@ -484,7 +493,7 @@
             width: 100%;
             border-collapse: collapse;
             margin-top: 1rem;
-            font-size: 13px;
+            font-size: 12px;
         }
 
         .price-table th {
@@ -500,11 +509,10 @@
             border: 1px solid var(--light-green);
         }
 
-        .price-input {
-            width: 80px;
-            padding: 6px;
-            border: 1px solid var(--border);
-            border-radius: 4px;
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
         }
 
         .no-results {
@@ -526,6 +534,10 @@
             .modal-content {
                 padding: 1.5rem;
             }
+
+            .header h1 {
+                font-size: 24px;
+            }
         }
     </style>
 </head>
@@ -540,36 +552,45 @@
             const [showCart, setShowCart] = React.useState(false);
             const [showAdmin, setShowAdmin] = React.useState(false);
             const [products, setProducts] = React.useState([]);
-            const [categories, setCategories] = React.useState([]);
+            const [categories, setCategories] = React.useState(['All']);
             const [searchTerm, setSearchTerm] = React.useState('');
             const [loading, setLoading] = React.useState(true);
 
             // Load products data
             React.useEffect(() => {
-                const loadProducts = () => {
-                    // Sample products with green markup
-                    const sampleProducts = [
-                        { id: 1, name: 'PAT NUTRELA ORG OMEGA 3 6 7 9', category: 'Patanjali Nutrela', mrp: 551, cost: 385.70, profit_margin: 30, stock: 55 },
-                        { id: 2, name: 'PAPAD KALI MIRCH - T', category: 'PAPAD', mrp: 55, cost: 38.50, profit_margin: 30, stock: 16 },
-                        { id: 3, name: 'CHANA DAL 500 GM (R1)', category: 'PULSES', mrp: 65, cost: 45.50, profit_margin: 30, stock: 6 },
-                        { id: 4, name: 'MOONG SABUT 500 GM (R1)', category: 'PULSES', mrp: 80, cost: 56, profit_margin: 30, stock: 6 },
-                        { id: 5, name: 'RICE BRAN OIL 1 LTR (B) - T', category: 'RICE BRAN OIL', mrp: 180, cost: 126, profit_margin: 30, stock: 15 },
-                        { id: 6, name: 'VIRGIN COCONUT OIL 500 ML (B) - T', category: 'VIRGIN COCONUT OIL', mrp: 365, cost: 255.50, profit_margin: 30, stock: 17 },
-                        { id: 7, name: 'POHA 500 GM -T', category: 'POHA', mrp: 45, cost: 31.50, profit_margin: 30, stock: 7 },
-                        { id: 8, name: 'VERMICELLI ROASTED 400 GM - T', category: 'VERMICELLI', mrp: 45, cost: 31.50, profit_margin: 30, stock: 30 },
-                        { id: 9, name: 'SESAME OIL 1 L (B)-T', category: 'SESAME OIL', mrp: 260, cost: 182, profit_margin: 30, stock: 12 },
-                        { id: 10, name: 'KALA NAMAK 200 GM - T', category: 'NAMAK', mrp: 15, cost: 10.50, profit_margin: 30, stock: 112 },
-                    ];
+                const loadProducts = async () => {
+                    try {
+                        // Try to load from localStorage first
+                        const savedProducts = localStorage.getItem('agarwal_products');
+                        if (savedProducts) {
+                            const parsed = JSON.parse(savedProducts);
+                            setProducts(parsed.products);
+                            setCategories(['All', ...parsed.categories]);
+                            setLoading(false);
+                            return;
+                        }
 
-                    // Load from localStorage if available
-                    const savedProducts = localStorage.getItem('agarwal_products');
-                    if (savedProducts) {
-                        const parsed = JSON.parse(savedProducts);
-                        setProducts(parsed.products);
-                        setCategories(['All', ...parsed.categories]);
-                    } else {
+                        // Try to load from products.json
+                        const response = await fetch('products.json');
+                        if (response.ok) {
+                            const data = await response.json();
+                            setProducts(data.products);
+                            setCategories(['All', ...data.categories]);
+                            // Save to localStorage
+                            localStorage.setItem('agarwal_products', JSON.stringify(data));
+                        } else {
+                            throw new Error('Could not load products.json');
+                        }
+                    } catch (error) {
+                        console.error('Error loading products:', error);
+                        // Fallback to sample products
+                        const sampleProducts = [
+                            { id: 1, name: 'PAT NUTRELA ORG OMEGA 3 6 7 9', category: 'Patanjali Nutrela', mrp: 551, cost: 385.70, profit_margin: 30, stock: 55 },
+                            { id: 2, name: 'PAPAD KALI MIRCH - T', category: 'PAPAD', mrp: 55, cost: 38.50, profit_margin: 30, stock: 16 },
+                            { id: 3, name: 'CHANA DAL 500 GM (R1)', category: 'PULSES', mrp: 65, cost: 45.50, profit_margin: 30, stock: 6 },
+                        ];
                         setProducts(sampleProducts);
-                        setCategories(['All', 'Patanjali Nutrela', 'PAPAD', 'PULSES', 'RICE BRAN OIL', 'VIRGIN COCONUT OIL', 'POHA', 'VERMICELLI', 'SESAME OIL', 'NAMAK']);
+                        setCategories(['All', 'Patanjali Nutrela', 'PAPAD', 'PULSES']);
                     }
                     setLoading(false);
                 };
@@ -635,11 +656,12 @@
                             const csvRow = results.data.find(row => 
                                 row.name && row.name.trim().toLowerCase() === product.name.toLowerCase()
                             );
-                            if (csvRow && csvRow.mrp) {
+                            if (csvRow) {
                                 return {
                                     ...product,
-                                    mrp: parseFloat(csvRow.mrp),
-                                    cost: csvRow.cost ? parseFloat(csvRow.cost) : product.cost
+                                    mrp: csvRow.mrp ? parseFloat(csvRow.mrp) : product.mrp,
+                                    cost: csvRow.cost ? parseFloat(csvRow.cost) : product.cost,
+                                    profit_margin: csvRow.profit_margin ? parseFloat(csvRow.profit_margin) : product.profit_margin
                                 };
                             }
                             return product;
@@ -678,53 +700,56 @@
                         </button>
                     </div>
 
-                    <div className="categories">
-                        {categories.map(cat => (
-                            <button
-                                key={cat}
-                                className={`category-btn ${selectedCategory === cat ? 'active' : ''}`}
-                                onClick={() => {
-                                    setSelectedCategory(cat);
-                                    setSearchTerm('');
-                                }}
-                            >
-                                {cat === 'All' ? '📋 All' : cat}
-                            </button>
-                        ))}
-                    </div>
-
-                    <div className="products-container">
-                        {loading ? (
-                            <div className="no-results">Loading products...</div>
-                        ) : filteredProducts.length === 0 ? (
-                            <div className="no-results">
-                                <p>No products found matching your search.</p>
-                            </div>
-                        ) : (
-                            <div className="products-grid">
-                                {filteredProducts.map(product => (
-                                    <div key={product.id} className="product-card">
-                                        <h3>{product.name}</h3>
-                                        <p>Stock: {product.stock} units</p>
-                                        <div className="price-info">
-                                            <span className="mrp">₹{product.mrp}</span>
-                                            <span className="profit">{product.profit_margin}% OFF</span>
-                                        </div>
-                                        <div className="product-footer">
-                                            <p className="product-price">₹{product.mrp}</p>
-                                            <button 
-                                                className="add-btn" 
-                                                onClick={() => addToCart(product)}
-                                                disabled={product.stock === 0}
-                                            >
-                                                Add +
-                                            </button>
-                                        </div>
-                                    </div>
+                    {loading ? (
+                        <div className="loading">Loading {products.length} products...</div>
+                    ) : (
+                        <>
+                            <div className="categories">
+                                {categories.map(cat => (
+                                    <button
+                                        key={cat}
+                                        className={`category-btn ${selectedCategory === cat ? 'active' : ''}`}
+                                        onClick={() => {
+                                            setSelectedCategory(cat);
+                                            setSearchTerm('');
+                                        }}
+                                    >
+                                        {cat === 'All' ? '📋 All' : cat}
+                                    </button>
                                 ))}
                             </div>
-                        )}
-                    </div>
+
+                            <div className="products-container">
+                                {filteredProducts.length === 0 ? (
+                                    <div className="no-results">
+                                        <p>No products found matching your search.</p>
+                                    </div>
+                                ) : (
+                                    <div className="products-grid">
+                                        {filteredProducts.map(product => (
+                                            <div key={product.id} className="product-card">
+                                                <h3>{product.name}</h3>
+                                                <div className="price-info">
+                                                    <span className="cost-badge">Cost: ₹{product.cost.toFixed(2)}</span>
+                                                    <span className="stock-badge">Stock: {product.stock}</span>
+                                                </div>
+                                                <div className="product-footer">
+                                                    <p className="product-price">₹{product.mrp}</p>
+                                                    <button 
+                                                        className="add-btn" 
+                                                        onClick={() => addToCart(product)}
+                                                        disabled={product.stock === 0}
+                                                    >
+                                                        Add +
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </>
+                    )}
 
                     {cart.length > 0 && (
                         <button className="cart-fab" onClick={() => setShowCart(!showCart)}>
@@ -801,7 +826,7 @@
                                 <div className="upload-section">
                                     <label>Upload CSV with Price Updates</label>
                                     <p style={{ fontSize: '12px', color: '#6B7280', marginBottom: '8px' }}>
-                                        CSV should have columns: name, mrp, cost
+                                        CSV should have columns: name, mrp, cost, profit_margin
                                     </p>
                                     <input
                                         type="file"
@@ -813,7 +838,7 @@
 
                                 <div>
                                     <h3 style={{ fontSize: '16px', marginTop: '1.5rem', marginBottom: '1rem', color: 'var(--text-primary)' }}>
-                                        Current Prices ({products.length} products)
+                                        Sample Products ({Math.min(products.length, 20)} of {products.length} total)
                                     </h3>
                                     <table className="price-table">
                                         <thead>
@@ -825,10 +850,10 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {products.slice(0, 10).map(product => (
+                                            {products.slice(0, 20).map(product => (
                                                 <tr key={product.id}>
-                                                    <td style={{ fontSize: '12px' }}>{product.name.substring(0, 20)}...</td>
-                                                    <td style={{ fontSize: '12px' }}>{product.category}</td>
+                                                    <td style={{ fontSize: '11px' }}>{product.name.substring(0, 20)}...</td>
+                                                    <td style={{ fontSize: '11px' }}>{product.category.substring(0, 15)}</td>
                                                     <td>₹{product.mrp}</td>
                                                     <td>₹{product.cost.toFixed(2)}</td>
                                                 </tr>
@@ -836,17 +861,17 @@
                                         </tbody>
                                     </table>
                                     <p style={{ fontSize: '12px', color: '#6B7280', marginTop: '1rem', textAlign: 'center' }}>
-                                        Showing first 10 products. Total: {products.length} products
+                                        Showing first 20 of {products.length} products
                                     </p>
                                 </div>
 
                                 <div style={{ marginTop: '1.5rem', padding: '1rem', background: 'var(--pale-green)', borderRadius: '8px', fontSize: '12px', color: 'var(--text-secondary)' }}>
                                     <strong>📝 How to update prices:</strong>
                                     <ol style={{ marginTop: '8px', paddingLeft: '20px' }}>
-                                        <li>Create a CSV file with columns: name, mrp, cost</li>
-                                        <li>Upload the file using the button above</li>
-                                        <li>Only products matching names will be updated</li>
-                                        <li>Data is saved locally on your device</li>
+                                        <li>Create a CSV file with columns: name, mrp, cost, profit_margin</li>
+                                        <li>Product names must match exactly</li>
+                                        <li>Upload the file to update prices instantly</li>
+                                        <li>Changes are saved locally on your device</li>
                                     </ol>
                                 </div>
                             </div>
