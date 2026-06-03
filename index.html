@@ -561,21 +561,6 @@
             color: #6B7280;
         }
 
-        .loading-spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid var(--primary-green);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
         @media (max-width: 640px) {
             .products-grid {
                 grid-template-columns: repeat(2, 1fr);
@@ -614,7 +599,6 @@
             const [adminPassword, setAdminPassword] = React.useState('');
             const [showPasswordPrompt, setShowPasswordPrompt] = React.useState(false);
 
-            // ⚠️ CHANGE THIS PASSWORD TO YOUR OWN!
             const ADMIN_PASSWORD = 'admin123';
 
             React.useEffect(() => {
@@ -622,13 +606,29 @@
                     try {
                         const response = await fetch('products.json');
                         const data = await response.json();
-                        setProducts(data.products || data);
+                        const productsList = Array.isArray(data) ? data : (data.products || []);
                         
-                        const uniqueCategories = [...new Set((data.products || data).map(p => p.category))];
+                        setProducts(productsList);
+                        
+                        const uniqueCategories = [...new Set(productsList.map(p => p.category || 'Other'))];
                         setCategories(['All', ...uniqueCategories.sort()]);
                     } catch (error) {
                         console.error('Error loading products:', error);
-                        alert('⚠️ Could not load products.json. Make sure it\'s in the same folder as index.html');
+                        alert('Products not loaded. Using sample data.');
+                        const sampleProducts = [
+                            { id: 1, name: 'PAT NUTRELA ORG OMEGA 3 6 7 9', category: 'Patanjali Nutrela', mrp: 551, cost: 385.70, profit_margin: 30, stock: 55 },
+                            { id: 2, name: 'PAPAD KALI MIRCH - T', category: 'PAPAD', mrp: 55, cost: 38.50, profit_margin: 30, stock: 16 },
+                            { id: 3, name: 'CHANA DAL 500 GM (R1)', category: 'PULSES', mrp: 65, cost: 45.50, profit_margin: 30, stock: 6 },
+                            { id: 4, name: 'MOONG SABUT 500 GM (R1)', category: 'PULSES', mrp: 80, cost: 56, profit_margin: 30, stock: 6 },
+                            { id: 5, name: 'RICE BRAN OIL 1 LTR (B) - T', category: 'RICE BRAN OIL', mrp: 180, cost: 126, profit_margin: 30, stock: 15 },
+                            { id: 6, name: 'VIRGIN COCONUT OIL 500 ML (B) - T', category: 'VIRGIN COCONUT OIL', mrp: 365, cost: 255.50, profit_margin: 30, stock: 17 },
+                            { id: 7, name: 'POHA 500 GM -T', category: 'POHA', mrp: 45, cost: 31.50, profit_margin: 30, stock: 7 },
+                            { id: 8, name: 'VERMICELLI ROASTED 400 GM - T', category: 'VERMICELLI', mrp: 45, cost: 31.50, profit_margin: 30, stock: 30 },
+                            { id: 9, name: 'SESAME OIL 1 L (B)-T', category: 'SESAME OIL', mrp: 260, cost: 182, profit_margin: 30, stock: 12 },
+                            { id: 10, name: 'KALA NAMAK 200 GM - T', category: 'NAMAK', mrp: 15, cost: 10.50, profit_margin: 30, stock: 112 },
+                        ];
+                        setProducts(sampleProducts);
+                        setCategories(['All', 'Patanjali Nutrela', 'PAPAD', 'PULSES', 'RICE BRAN OIL', 'VIRGIN COCONUT OIL', 'POHA', 'VERMICELLI', 'SESAME OIL', 'NAMAK']);
                     } finally {
                         setLoading(false);
                     }
@@ -636,9 +636,9 @@
 
                 loadProducts();
 
-                // KEYBOARD SHORTCUT: Ctrl+Alt+A (Windows) or Cmd+Option+A (Mac)
+                // KEYBOARD SHORTCUT: Ctrl+Alt+A
                 const handleKeyPress = (e) => {
-                    if ((e.ctrlKey || e.metaKey) && e.altKey && e.key === 'a') {
+                    if (e.ctrlKey && e.altKey && (e.key === 'a' || e.key === 'A')) {
                         e.preventDefault();
                         setShowPasswordPrompt(true);
                     }
@@ -678,9 +678,9 @@
 
             const filteredProducts = React.useMemo(() => {
                 return products.filter(product => {
-                    const matchesCategory = selectedCategory === 'All' || product.category === selectedCategory;
+                    const matchesCategory = selectedCategory === 'All' || (product.category === selectedCategory);
                     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                         product.category.toLowerCase().includes(searchTerm.toLowerCase());
+                                         (product.category && product.category.toLowerCase().includes(searchTerm.toLowerCase()));
                     return matchesCategory && matchesSearch;
                 });
             }, [products, selectedCategory, searchTerm]);
@@ -752,7 +752,7 @@
                             products: updatedProducts,
                             categories: categories.filter(c => c !== 'All')
                         }));
-                        alert(`✅ Updated ${updatedCount} products!\n\nPrices & Stock Quantities Updated Successfully!`);
+                        alert(`✅ Updated ${updatedCount} products!`);
                         setShowAdmin(false);
                     },
                     error: (err) => {
@@ -789,10 +789,7 @@
                     </div>
 
                     {loading ? (
-                        <div className="no-results">
-                            <div className="loading-spinner"></div>
-                            <p>Loading {products.length} products...</p>
-                        </div>
+                        <div className="no-results">Loading products...</div>
                     ) : (
                         <>
                             <div className="categories">
@@ -805,7 +802,7 @@
                                             setSearchTerm('');
                                         }}
                                     >
-                                        {cat === 'All' ? '📋 All' : cat}
+                                        {cat}
                                     </button>
                                 ))}
                             </div>
@@ -931,7 +928,7 @@
                                 </form>
 
                                 <div className="tip-box">
-                                    <strong>💡 Tip:</strong> Password is case-sensitive. If you forgot your password, edit the HTML file and change ADMIN_PASSWORD value.
+                                    <strong>💡 Tip:</strong> Shortcut: Ctrl+Alt+A (Windows) or Cmd+Option+A (Mac)
                                 </div>
                             </div>
                         </div>
