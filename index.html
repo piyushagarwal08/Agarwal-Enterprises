@@ -616,19 +616,19 @@
                         console.error('Error loading products:', error);
                         alert('Products not loaded. Using sample data.');
                         const sampleProducts = [
-                            { id: 1, name: 'PAT NUTRELA ORG OMEGA 3 6 7 9', category: 'Patanjali Nutrela', mrp: 551, cost: 385.70, profit_margin: 30, stock: 55 },
-                            { id: 2, name: 'PAPAD KALI MIRCH - T', category: 'PAPAD', mrp: 55, cost: 38.50, profit_margin: 30, stock: 16 },
-                            { id: 3, name: 'CHANA DAL 500 GM (R1)', category: 'PULSES', mrp: 65, cost: 45.50, profit_margin: 30, stock: 6 },
-                            { id: 4, name: 'MOONG SABUT 500 GM (R1)', category: 'PULSES', mrp: 80, cost: 56, profit_margin: 30, stock: 6 },
-                            { id: 5, name: 'RICE BRAN OIL 1 LTR (B) - T', category: 'RICE BRAN OIL', mrp: 180, cost: 126, profit_margin: 30, stock: 15 },
-                            { id: 6, name: 'VIRGIN COCONUT OIL 500 ML (B) - T', category: 'VIRGIN COCONUT OIL', mrp: 365, cost: 255.50, profit_margin: 30, stock: 17 },
-                            { id: 7, name: 'POHA 500 GM -T', category: 'POHA', mrp: 45, cost: 31.50, profit_margin: 30, stock: 7 },
-                            { id: 8, name: 'VERMICELLI ROASTED 400 GM - T', category: 'VERMICELLI', mrp: 45, cost: 31.50, profit_margin: 30, stock: 30 },
-                            { id: 9, name: 'SESAME OIL 1 L (B)-T', category: 'SESAME OIL', mrp: 260, cost: 182, profit_margin: 30, stock: 12 },
-                            { id: 10, name: 'KALA NAMAK 200 GM - T', category: 'NAMAK', mrp: 15, cost: 10.50, profit_margin: 30, stock: 112 },
+                            { id: 1, name: 'PAT NUTRELA ORG OMEGA 3 6 7 9', category: 'Patanjali Nutrela', mrp: 551, cost: 385.70, profit_margin: 0, stock: 55 },
+                            { id: 2, name: 'PAPAD KALI MIRCH - T', category: 'PAPAD', mrp: 55, cost: 38.50, profit_margin: 0, stock: 16 },
+                            { id: 3, name: 'CHANA DAL 500 GM (R1)', category: 'PULSES', mrp: 65, cost: 45.50, profit_margin: 0, stock: 6 },
+                            { id: 4, name: 'MOONG SABUT 500 GM (R1)', category: 'PULSES', mrp: 80, cost: 56, profit_margin: 0, stock: 6 },
+                            { id: 5, name: 'RICE BRAN OIL 1 LTR (B) - T', category: 'RICE BRAN OIL', mrp: 180, cost: 126, profit_margin: 0, stock: 15 },
+                            { id: 6, name: 'VIRGIN COCONUT OIL 500 ML (B) - T', category: 'VIRGIN COCONUT OIL', mrp: 365, cost: 255.50, profit_margin: 0, stock: 17 },
+                            { id: 7, name: 'POHA 500 GM -T', category: 'POHA', mrp: 45, cost: 31.50, profit_margin: 0, stock: 7 },
+                            { id: 8, name: 'VERMICELLI ROASTED 400 GM - T', category: 'VERMICELLI', mrp: 45, cost: 31.50, profit_margin: 0, stock: 30 },
+                            { id: 9, name: 'SESAME OIL 1 L (B)-T', category: 'SESAME OIL', mrp: 260, cost: 182, profit_margin: 0, stock: 12 },
+                            { id: 10, name: 'KALA NAMAK 200 GM - T', category: 'NAMAK', mrp: 15, cost: 10.50, profit_margin: 0, stock: 112 },
                         ];
                         setProducts(sampleProducts);
-                        setCategories(['All', 'Patanjali Nutrela', 'PAPAD', 'PULSES', 'RICE BRAN OIL', 'VIRGIN COCONUT OIL', 'POHA', 'VERMICELLI', 'SESAME OIL', 'NAMAK']);
+                        setCategories(['All', "Agarbatti", "Air Freshener", "Aloevera", "Amla Juice", "Amrit Rasayan", "Asav", "Atta", "Ayurvedic Medicine", "Badam Pak", "Badam Roghan", "Balm", "Bamboo Products", "Besan", "Bhasma", "Biscuits", "Body Cleanser", "Body Lotion", "Breakfast Cereals", "Bura", "Camphor", "Chana Sattu", "Churna", "Chyawanprash", "Cotton Wicks", "Dalia", "Dant Kanti", "Detergent Cake", "Detergent Powder", "Detox & Health Supplements", "Digestives", "Dishwash", "Dry Fruits", "Ear Drop", "Eye Drop", "Face Wash", "Food Bar", "Gajak & Rewari", "Gaumaya Products", "Ghee", "Ghrit", "Gonyle", "Grass Powder", "Groundnut Oil", "Gulab Jal", "Gulkand", "Gur", "Hair Conditioner", "Hair Oil", "Hand Wash & Sanitizer", "Herbal Mehndi & Hair Colour", "Hing", "Honey", "Household Cleaner", "Jam", "Kesar", "Kesh Kanti Shampoo", "Ketchup", "Khand", "Ladoo", "Madhuram", "Maida", "Medicated Juice", "Men's Care", "Murrabba & Candy", "Mustard Oil", "Namak", "Namkeen", "Naphthalene Balls", "Noodles", "Nutrela", "Others", "Pain Reliever", "Papad", "Pickle", "Poha", "Powervita", "Pulses", "Rice", "Rice Bran Oil", "Roasted Chana", "Roasted Coconut Oil", "Roasted Diet Foods", "Roli", "Rusk", "Sabudana", "Samagri & Pooja Items", "Sauce", "Seabuckthorn", "Sesame Oil", "Sharbat & Thandai", "Shishu Care", "Skin Care", "Soya Badi", "Soyabean Oil", "Soyavita", "Spices", "Sugar", "Suji", "Sunflower Oil", "Swasari", "Tablet & Vati", "Taila", "Tea", "Tejus Tailum", "Toothbrush", "Vermicelli", "Virgin Coconut Oil"]);
                     } finally {
                         setLoading(false);
                     }
