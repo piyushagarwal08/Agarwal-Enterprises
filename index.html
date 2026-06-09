@@ -839,16 +839,25 @@
                                     <div className="products-grid">
                                         {filteredProducts.map(product => {
                                             const offerPrice = product.offer_price || product.mrp;
+                                            const showDiscount = offerPrice !== product.mrp;
                                             
                                             return (
                                             <div key={product.id} className="product-card">
                                                 <h3>{product.name}</h3>
                                                 <div className="price-info">
-                                                    <span className="mrp-price">MRP: ₹{product.mrp}</span>
+                                                    {showDiscount ? (
+                                                        <span className="mrp-price">MRP: ₹{product.mrp}</span>
+                                                    ) : (
+                                                        <span></span>
+                                                    )}
                                                     <span className="stock-badge">Stock: {product.stock}</span>
                                                 </div>
                                                 <div className="product-footer">
-                                                    <p className="offer-price">₹{offerPrice}</p>
+                                                    {showDiscount ? (
+                                                        <p className="offer-price">₹{offerPrice}</p>
+                                                    ) : (
+                                                        <p className="offer-price">₹{product.mrp}</p>
+                                                    )}
                                                     <button 
                                                         className="add-btn" 
                                                         onClick={() => addToCart(product)}
