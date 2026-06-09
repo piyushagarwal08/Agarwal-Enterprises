@@ -12,32 +12,32 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     
-    <!-- Firebase SDK for cross-device syncing -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js"></script>
+<!-- Firebase SDK (COMPAT VERSION - works with regular script tags) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
-    <!-- Firebase Configuration -->
-    <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyBgP39y1Q3czsqKuc3RI0NgfSIAr8uzkIA",
-            authDomain: "pmsjagatpura.firebaseapp.com",
-            databaseURL: "https://pmsjagatpura.firebaseio.com",
-            projectId: "pmsjagatpura",
-            storageBucket: "pmsjagatpura.firebasestorage.app",
-            messagingSenderId: "1024863434032",
-            appId: "1:1024863434032:web:784859d6711b5da21984f5"
-        };
+<!-- Firebase Configuration -->
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyBgP39y1Q3czsqKuc3RI0NgfSIAr8uzkIA",
+        authDomain: "pmsjagatpura.firebaseapp.com",
+        databaseURL: "https://pmsjagatpura.firebaseio.com",
+        projectId: "pmsjagatpura",
+        storageBucket: "pmsjagatpura.firebasestorage.app",
+        messagingSenderId: "1024863434032",
+        appId: "1:1024863434032:web:784859d6711b5da21984f5"
+    };
 
-        try {
-            firebase.initializeApp(firebaseConfig);
-            const db = firebase.database();
-            window.firebaseDb = db;
-            console.log('✅ Firebase initialized successfully - Cross-device syncing ENABLED!');
-        } catch (error) {
-            console.warn('⚠️ Firebase error:', error);
-            window.firebaseDb = null;
-        }
-    </script>
+    try {
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        window.firebaseDb = db;
+        console.log('✅ Firebase initialized successfully - Cross-device syncing ENABLED!');
+    } catch (error) {
+        console.error('❌ Firebase error:', error);
+        window.firebaseDb = null;
+    }
+</script>
 
     <style>
         :root {
