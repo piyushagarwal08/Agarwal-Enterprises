@@ -7409,7 +7409,127 @@
       "profit_margin": 2.0,
       "stock": 134,
       "description": "AASTHA BAMBOOLESS AGAR. SHAHI MOGRA-80G"
-    }
+    },
+      {
+      "id": 742,
+      "name": "PATANJALI MADHUISHTI HAWAN SAMAGRI",
+      "category": "AASTHA",
+      "mrp": 325.0,
+      "cost": 325.0,
+      "profit_margin": 2.0,
+      "stock": 11,
+      "description": "PATANJALI MADHUISHTI HAWAN SAMAGRI"
+    },
+      {
+      "id": 743,
+      "name": "KALAVA MOLI",
+      "category": "AASTHA",
+      "mrp": 12.0,
+      "cost": 12.0,
+      "profit_margin": 2.0,
+      "stock": 11,
+      "description": "KALAVA MOLI"
+    },
+    {
+      "id": 744,
+      "name": "BALM",
+      "category": "MEDICINE",
+      "mrp": 56.0,
+      "cost": 56.0,
+      "profit_margin": 2.0,
+      "stock": 7,
+      "description": "BALM"
+    },
+    {
+      "id": 745,
+      "name": "PATANJALI RASGULLA 1 KG",
+      "category": "SWEET",
+      "mrp": 210.0,
+      "cost": 210.0,
+      "profit_margin": 2.0,
+      "stock": 1,
+      "description": "PATANJALI RASGULLA 1 KG"
+    },
+    {
+      "id": 746,
+      "name": "AASTHA GOMAY HAWAN KUND",
+      "category": "AASTHA",
+      "mrp": 28.0,
+      "cost": 28.0,
+      "profit_margin": 2.0,
+      "stock": 2,
+      "description": "AASTHA GOMAY HAWAN KUND"
+    },
+    {
+      "id": 747,
+      "name": "DIVYA AKIK PISHTI",
+      "category": "MEDICINE",
+      "mrp": 30.0,
+      "cost": 30.0,
+      "profit_margin": 2.0,
+      "stock": 2,
+      "description": "DIVYA AKIK PISHTI"
+    },
+    {
+      "id": 748,
+      "name": "DIVYA MEDOHAR VATI",
+      "category": "MEDICINE",
+      "mrp": 93.0,
+      "cost": 93.0,
+      "profit_margin": 2.0,
+      "stock": 1,
+      "description": "DIVYA AKIK PISHTI"
+    },
+    {
+      "id": 749,
+      "name": "PATANJALI THANDAI POWDER",
+      "category": "DRINKS",
+      "mrp": 235.0,
+      "cost": 235.0,
+      "profit_margin": 2.0,
+      "stock": 1,
+      "description": "PATANJALI THANDAI POWDER"
+    },
+    {
+      "id": 750,
+      "name": "PATANJALI DOODH BISCUIT 800 GM",
+      "category": "BISCUIT",
+      "mrp": 125.0,
+      "cost": 125.0,
+      "profit_margin": 2.0,
+      "stock": 13,
+      "description": "PATANJALI DOODH BISCUIT 800 GM"
+    },
+    {
+      "id": 751,
+      "name": "PATANJALI SUNSCREAM",
+      "category": "CREAM",
+      "mrp": 100.0,
+      "cost": 100.0,
+      "profit_margin": 2.0,
+      "stock": 2,
+      "description": "PATANJALI SUNSCREAM"
+    },
+    {
+      "id": 752,
+      "name": "PATANJALI KAJAL",
+      "category": "CREAM",
+      "mrp": 100.0,
+      "cost": 100.0,
+      "profit_margin": 2.0,
+      "stock": 1,
+      "description": "PATANJALI KAJAL"
+    },
+    {
+      "id": 753,
+      "name": "PATANJALI BEL CANDY",
+      "category": "CANDY",
+      "mrp": 70.0,
+      "cost": 70.0,
+      "profit_margin": 2.0,
+      "stock": 2,
+      "description": "PATANJALI BEL CANDY"
+    },
   ],
   "categories": [
     "16 STICK-PREM.GOLDEN",
