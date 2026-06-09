@@ -4,10 +4,41 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Patanjali Mega Store - Authentic Products</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%2310B981'/%3E%3Cpath d='M50 20 Q65 35 60 55 Q50 70 35 60 Q25 50 30 35 Q40 20 50 20 Z' fill='%23FFFFFF' opacity='0.9'/%3E%3Ccircle cx='50' cy='50' r='5' fill='%2310B981'/%3E%3C/svg%3E" />
+    <meta name="theme-color" content="#10B981">
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    
+    <!-- Firebase SDK for cross-device syncing -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js"></script>
+
+    <!-- Firebase Configuration -->
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBgP39y1Q3czsqKuc3RI0NgfSIAr8uzkIA",
+            authDomain: "pmsjagatpura.firebaseapp.com",
+            databaseURL: "https://pmsjagatpura.firebaseio.com",
+            projectId: "pmsjagatpura",
+            storageBucket: "pmsjagatpura.firebasestorage.app",
+            messagingSenderId: "1024863434032",
+            appId: "1:1024863434032:web:784859d6711b5da21984f5"
+        };
+
+        try {
+            firebase.initializeApp(firebaseConfig);
+            const db = firebase.database();
+            window.firebaseDb = db;
+            console.log('✅ Firebase initialized successfully - Cross-device syncing ENABLED!');
+        } catch (error) {
+            console.warn('⚠️ Firebase error:', error);
+            window.firebaseDb = null;
+        }
+    </script>
+
     <style>
         :root {
             --primary-green: #10B981;
@@ -616,6 +647,42 @@
             React.useEffect(() => {
                 const loadProducts = async () => {
                     try {
+                        // PRIORITY 1: Check localStorage (CSV updates take priority)
+                        const savedData = localStorage.getItem('agarwal_products');
+                        if (savedData) {
+                            try {
+                                const parsed = JSON.parse(savedData);
+                                const productsList = Array.isArray(parsed) ? parsed : (parsed.products || []);
+                                if (productsList.length > 0) {
+                                    setProducts(productsList);
+                                    const uniqueCategories = [...new Set(productsList.map(p => p.category || 'Other'))];
+                                    setCategories(['All', ...uniqueCategories.sort()]);
+                                    console.log('✅ Loaded products from localStorage (CSV updates preserved)');
+                                    return;
+                                }
+                            } catch (e) {
+                                console.log('localStorage data invalid, trying Firebase');
+                            }
+                        }
+                        
+                        // PRIORITY 2: Load from Firebase (cross-device sync)
+                        if (window.firebaseDb) {
+                            try {
+                                const snapshot = await window.firebaseDb.ref('products').get();
+                                if (snapshot.exists()) {
+                                    const productsList = snapshot.val();
+                                    setProducts(productsList);
+                                    const uniqueCategories = [...new Set(productsList.map(p => p.category || 'Other'))];
+                                    setCategories(['All', ...uniqueCategories.sort()]);
+                                    console.log('✅ Loaded products from Firebase (real-time synced)');
+                                    return;
+                                }
+                            } catch (error) {
+                                console.log('Firebase not available, trying products.json');
+                            }
+                        }
+                        
+                        // PRIORITY 3: Fallback to products.json file
                         const response = await fetch('products.json');
                         const data = await response.json();
                         const productsList = Array.isArray(data) ? data : (data.products || []);
@@ -624,6 +691,7 @@
                         
                         const uniqueCategories = [...new Set(productsList.map(p => p.category || 'Other'))];
                         setCategories(['All', ...uniqueCategories.sort()]);
+                        console.log('✅ Loaded products from products.json');
                     } catch (error) {
                         console.error('Error loading products:', error);
                         alert('Products not loaded. Using sample data.');
@@ -769,12 +837,29 @@
                         setCategories(['All', ...uniqueCategories.sort()]);
                         setSelectedCategory('All');
                         
+                        // Save to localStorage (immediate)
+                        // Save to localStorage (immediate)
                         localStorage.setItem('agarwal_products', JSON.stringify({
                             products: updatedProducts,
                             categories: uniqueCategories.sort()
                         }));
-                        alert(`✅ Updated ${updatedCount} products!\n\nCategories also updated from CSV!`);
-                        setShowAdmin(false);
+                        
+                        // Save to Firebase (cross-device sync)
+                        const saveToFirebase = async () => {
+                            try {
+                                if (window.firebaseDb) {
+                                    await window.firebaseDb.ref('products').set(updatedProducts);
+                                    alert(`✅ Updated ${updatedCount} products!\n\n✅ FIREBASE SYNCED!\n\nAll devices now see updated prices!\n\nTime: ${new Date().toLocaleString()}`);
+                                } else {
+                                    alert(`✅ Updated ${updatedCount} products locally!\n\n⚠️ Firebase not configured.\nChanges saved in localStorage.\n\nConfigure Firebase for cross-device sync.`);
+                                }
+                            } catch (error) {
+                                alert(`✅ Updated ${updatedCount} products locally!\n\n⚠️ Firebase sync failed: ${error.message}\n\nChanges saved in browser.`);
+                            }
+                            setShowAdmin(false);
+                        };
+                        
+                        saveToFirebase();
                     },
                     error: (err) => {
                         alert('Error parsing CSV: ' + err.message);
