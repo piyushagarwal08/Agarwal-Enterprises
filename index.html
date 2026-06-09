@@ -668,7 +668,17 @@
                         // PRIORITY 2: Load from Firebase (cross-device sync)
                         if (window.firebaseDb) {
                             try {
-                                const snapshot = await window.firebaseDb.ref('products').get();
+                                const snapshot = await new Promise((resolve, reject) => {
+                                    const timeout = setTimeout(() => reject(new Error('Firebase timeout')), 5000);
+                                    window.firebaseDb.ref('products').once('value', (snap) => {
+                                        clearTimeout(timeout);
+                                        resolve(snap);
+                                    }, (error) => {
+                                        clearTimeout(timeout);
+                                        reject(error);
+                                    });
+                                });
+                                
                                 if (snapshot.exists()) {
                                     const productsList = snapshot.val();
                                     setProducts(productsList);
@@ -678,7 +688,7 @@
                                     return;
                                 }
                             } catch (error) {
-                                console.log('Firebase not available, trying products.json');
+                                console.log('Firebase not available, trying products.json:', error.message);
                             }
                         }
                         
