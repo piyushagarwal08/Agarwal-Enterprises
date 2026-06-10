@@ -1,4 +1,6 @@
-[
+{
+  "products":
+  [
   {
     "id": 1,
     "name": "7 GRAIN DIGESTIVE BISCUIT 200 GM",
@@ -5103,4 +5105,6 @@
     "offer_price": 675,
     "stock": 12
   }
-]
+],
+  "categories": ["Ayurvedic Medicines", "Health Supplements & Wellness", "Hair Care", "Skin & Face Care", "Body & Bath Care", "Oral Care", "Grocery & Staples", "Spices & Cooking Essentials", "Packaged Foods & Beverages", "Pooja & Household"]
+}
