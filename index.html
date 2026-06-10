@@ -641,6 +641,7 @@
             const [isAdminLoggedIn, setIsAdminLoggedIn] = React.useState(false);
             const [adminPassword, setAdminPassword] = React.useState('');
             const [showPasswordPrompt, setShowPasswordPrompt] = React.useState(false);
+            const adminTapRef = React.useRef({ count: 0, timer: null });
 
             const ADMIN_PASSWORD = 'admin123';
 
@@ -744,6 +745,19 @@
                     setShowAdmin(true);
                 } else {
                     setShowPasswordPrompt(true);
+                }
+            };
+
+            // HIDDEN ADMIN ACCESS: tap the store title 5 times within 1.5s
+            const handleSecretTap = () => {
+                const s = adminTapRef.current;
+                s.count += 1;
+                clearTimeout(s.timer);
+                s.timer = setTimeout(() => { s.count = 0; }, 1500);
+                if (s.count >= 5) {
+                    s.count = 0;
+                    clearTimeout(s.timer);
+                    handleAdminClick();
                 }
             };
 
@@ -877,10 +891,50 @@
                 });
             };
 
+            // RELOAD FROM FILE: clears cached data and reloads products.json, then re-syncs
+            const handleReloadFromFile = async () => {
+                if (!window.confirm('Reload all products from products.json?\n\nThis overwrites the cached data (localStorage + Firebase) with the file contents.')) {
+                    return;
+                }
+                try {
+                    const response = await fetch('products.json?t=' + Date.now()); // cache-bust
+                    const data = await response.json();
+                    const productsList = Array.isArray(data) ? data : (data.products || []);
+                    if (!productsList.length) {
+                        alert('❌ products.json is empty or could not be read.');
+                        return;
+                    }
+                    const uniqueCategories = [...new Set(productsList.map(p => p.category || 'Other'))].sort();
+
+                    setProducts(productsList);
+                    setCategories(['All', ...uniqueCategories]);
+                    setSelectedCategory('All');
+
+                    localStorage.setItem('agarwal_products', JSON.stringify({
+                        products: productsList,
+                        categories: uniqueCategories
+                    }));
+
+                    if (window.firebaseDb) {
+                        try {
+                            await window.firebaseDb.ref('products').set(productsList);
+                            alert(`✅ Reloaded ${productsList.length} products from file!\n\n✅ Synced to Firebase — all devices updated.\n\nCategories now: ${uniqueCategories.length}`);
+                        } catch (err) {
+                            alert(`✅ Reloaded ${productsList.length} products locally!\n\n⚠️ Firebase sync failed: ${err.message}\nChanges saved in this browser.`);
+                        }
+                    } else {
+                        alert(`✅ Reloaded ${productsList.length} products from file (saved locally).\n\nCategories now: ${uniqueCategories.length}`);
+                    }
+                    setShowAdmin(false);
+                } catch (err) {
+                    alert('❌ Could not load products.json: ' + err.message);
+                }
+            };
+
             return (
                 <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #F0FDF4 0%, #F3F4F6 100%)' }}>
                     <div className="header">
-                        <h1>🌿 Patanjali Mega Store (Jagatpura)</h1>
+                        <h1 onClick={handleSecretTap} style={{ userSelect: 'none', WebkitUserSelect: 'none', cursor: 'default' }}>🌿 Patanjali Mega Store (Jagatpura)</h1>
                         <p>Khasra No. 500/356 (Middle), Near KS Petrol Pump,</p>
                         <p>Near Mahima City Ville, Karolan Ka Barh, Jagatpura, Jaipur - 302017</p>
                         <p style={{ marginTop: '0.5rem', fontStyle: 'italic', fontWeight: '500' }}>Authentic Patanjali Products, Delivered with Trust.</p>
@@ -1087,6 +1141,16 @@
                                         className="file-input"
                                         onChange={handleCSVUpload}
                                     />
+                                </div>
+
+                                <div className="upload-section" style={{ marginTop: '1rem' }}>
+                                    <label>Reset / Reload Catalog</label>
+                                    <p style={{ fontSize: '12px', color: '#6B7280', marginBottom: '8px' }}>
+                                        Reloads all products & categories from products.json and re-syncs localStorage + Firebase. Use this if the site is showing old categories.
+                                    </p>
+                                    <button className="admin-btn" style={{ width: '100%' }} onClick={handleReloadFromFile}>
+                                        🔄 Reload from products.json
+                                    </button>
                                 </div>
 
                                 <div>
