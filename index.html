@@ -604,6 +604,137 @@
             color: #6B7280;
         }
 
+        /* --- Single / Bulk update feature --- */
+        .mode-toggle {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 1.25rem;
+        }
+
+        .mode-toggle button {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: white;
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .mode-toggle button.active {
+            background: var(--primary-green);
+            color: white;
+            border-color: var(--primary-green);
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+        }
+
+        .combo-wrap {
+            position: relative;
+            margin-bottom: 1rem;
+        }
+
+        .combo-input {
+            width: 100%;
+            padding: 11px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .combo-list {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: calc(100% + 4px);
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            max-height: 240px;
+            overflow-y: auto;
+            z-index: 5;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+        }
+
+        .combo-item {
+            padding: 10px 12px;
+            font-size: 13px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--pale-green);
+        }
+
+        .combo-item:hover,
+        .combo-item:active {
+            background: var(--pale-green);
+        }
+
+        .combo-item .ci-cat {
+            display: block;
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        .combo-empty {
+            padding: 12px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            text-align: center;
+        }
+
+        .selected-chip {
+            background: var(--pale-green);
+            border: 1px solid var(--light-green);
+            border-radius: 8px;
+            padding: 10px 12px;
+            margin-bottom: 1rem;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--forest);
+        }
+
+        .edit-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 1rem;
+        }
+
+        .edit-field label {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .edit-field input {
+            width: 100%;
+            padding: 9px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .save-single-btn {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary-green);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .save-single-btn:hover {
+            background: var(--dark-green);
+        }
+
         @media (max-width: 640px) {
             .products-grid {
                 grid-template-columns: repeat(2, 1fr);
@@ -643,6 +774,15 @@
             const [adminPassword, setAdminPassword] = React.useState('');
             const [showPasswordPrompt, setShowPasswordPrompt] = React.useState(false);
             const adminTapRef = React.useRef({ count: 0, timer: null });
+
+            // --- Single / Bulk update feature state ---
+            const [updateMode, setUpdateMode] = React.useState('single'); // 'single' | 'bulk'
+            const [productSearch, setProductSearch] = React.useState('');
+            const [selectedProductId, setSelectedProductId] = React.useState(null);
+            const [dropdownOpen, setDropdownOpen] = React.useState(false);
+            const [editMrp, setEditMrp] = React.useState('');
+            const [editOfferPrice, setEditOfferPrice] = React.useState('');
+            const [editStock, setEditStock] = React.useState('');
 
             const ADMIN_PASSWORD = 'admin123';
 
@@ -827,6 +967,99 @@
                 if (address) message += `\n*Delivery Address:*\n${address}`;
                 const encoded = encodeURIComponent(message);
                 window.open(`https://wa.me/917300076573?text=${encoded}`, '_blank');
+            };
+
+            // Shared persistence: updates state, categories, localStorage, and Firebase
+            const persistProducts = async (updatedProducts, successMsg, closeAfter) => {
+                setProducts(updatedProducts);
+                const uniqueCategories = [...new Set(updatedProducts.map(p => p.category || 'Other'))].sort();
+                setCategories(['All', ...uniqueCategories]);
+
+                localStorage.setItem('agarwal_products', JSON.stringify({
+                    products: updatedProducts,
+                    categories: uniqueCategories
+                }));
+
+                try {
+                    if (window.firebaseDb) {
+                        await window.firebaseDb.ref('products').set(updatedProducts);
+                        alert(successMsg + '\n\n✅ FIREBASE SYNCED!\nAll devices now see the update.\n\nTime: ' + new Date().toLocaleString());
+                    } else {
+                        alert(successMsg + '\n\n⚠️ Firebase not configured.\nSaved on this device only.');
+                    }
+                } catch (error) {
+                    alert(successMsg + '\n\n⚠️ Firebase sync failed: ' + error.message + '\nSaved on this device.');
+                }
+                if (closeAfter) setShowAdmin(false);
+            };
+
+            // Filtered matches for the searchable product dropdown
+            const dropdownMatches = React.useMemo(() => {
+                const q = productSearch.trim().toLowerCase();
+                const base = q
+                    ? products.filter(p => p.name.toLowerCase().includes(q))
+                    : products;
+                return base.slice(0, 50);
+            }, [products, productSearch]);
+
+            // Pick a product from the dropdown and pre-fill its current values
+            const selectProductForEdit = (product) => {
+                setSelectedProductId(product.id);
+                setProductSearch(product.name);
+                setDropdownOpen(false);
+                setEditMrp(product.mrp != null ? String(product.mrp) : '');
+                setEditOfferPrice(product.offer_price != null ? String(product.offer_price) : (product.mrp != null ? String(product.mrp) : ''));
+                setEditStock(product.stock != null ? String(product.stock) : '');
+            };
+
+            const resetSingleForm = () => {
+                setSelectedProductId(null);
+                setProductSearch('');
+                setEditMrp('');
+                setEditOfferPrice('');
+                setEditStock('');
+                setDropdownOpen(false);
+            };
+
+            // Save a single product's price / stock
+            const handleSingleUpdate = async () => {
+                if (!selectedProductId) {
+                    alert('Please select a product from the list first.');
+                    return;
+                }
+                const target = products.find(p => p.id === selectedProductId);
+                if (!target) {
+                    alert('Selected product could not be found. Please pick it again.');
+                    return;
+                }
+                if (editMrp === '' && editOfferPrice === '' && editStock === '') {
+                    alert('Enter a new MRP, offer price, or stock value to update.');
+                    return;
+                }
+
+                const mrpVal = editMrp === '' ? target.mrp : parseFloat(editMrp);
+                const offerVal = editOfferPrice === '' ? (target.offer_price != null ? target.offer_price : target.mrp) : parseFloat(editOfferPrice);
+                const stockVal = editStock === '' ? target.stock : parseInt(editStock, 10);
+
+                if ((editMrp !== '' && (isNaN(mrpVal) || mrpVal < 0)) ||
+                    (editOfferPrice !== '' && (isNaN(offerVal) || offerVal < 0)) ||
+                    (editStock !== '' && (isNaN(stockVal) || stockVal < 0))) {
+                    alert('Please enter valid, non-negative numbers.');
+                    return;
+                }
+
+                const updatedProducts = products.map(p =>
+                    p.id === selectedProductId
+                        ? { ...p, mrp: mrpVal, offer_price: offerVal, stock: stockVal }
+                        : p
+                );
+
+                await persistProducts(
+                    updatedProducts,
+                    `✅ Updated "${target.name}"\n\nMRP: ₹${mrpVal}\nOffer Price: ₹${offerVal}\nStock: ${stockVal} units`,
+                    false // keep panel open so you can update more products
+                );
+                resetSingleForm();
             };
 
             const handleCSVUpload = (event) => {
@@ -1202,28 +1435,139 @@
                                     <button className="modal-close" onClick={() => setShowAdmin(false)}>✕</button>
                                 </div>
 
-                                <div className="upload-section">
-                                    <label>Upload CSV with Price & Stock Updates</label>
-                                    <p style={{ fontSize: '12px', color: '#6B7280', marginBottom: '8px' }}>
-                                        CSV columns: name, category, mrp, offer_price, stock
-                                    </p>
-                                    <input
-                                        type="file"
-                                        accept=".csv"
-                                        className="file-input"
-                                        onChange={handleCSVUpload}
-                                    />
-                                </div>
-
-                                <div className="upload-section" style={{ marginTop: '1rem' }}>
-                                    <label>Reset / Reload Catalog</label>
-                                    <p style={{ fontSize: '12px', color: '#6B7280', marginBottom: '8px' }}>
-                                        Reloads all products & categories from products.json and re-syncs localStorage + Firebase. Use this if the site is showing old categories.
-                                    </p>
-                                    <button className="admin-btn" style={{ width: '100%' }} onClick={handleReloadFromFile}>
-                                        🔄 Reload from products.json
+                                <div className="mode-toggle">
+                                    <button
+                                        className={updateMode === 'single' ? 'active' : ''}
+                                        onClick={() => { setUpdateMode('single'); }}
+                                    >
+                                        ✏️ Single Update
+                                    </button>
+                                    <button
+                                        className={updateMode === 'bulk' ? 'active' : ''}
+                                        onClick={() => { setUpdateMode('bulk'); setDropdownOpen(false); }}
+                                    >
+                                        📦 Bulk Update (CSV)
                                     </button>
                                 </div>
+
+                                {updateMode === 'single' && (
+                                    <div className="upload-section">
+                                        <label>Select a product</label>
+                                        <p style={{ fontSize: '12px', color: '#6B7280', marginBottom: '8px' }}>
+                                            Type to search, tap a product, then update its price and/or stock.
+                                        </p>
+
+                                        <div className="combo-wrap">
+                                            <input
+                                                type="text"
+                                                className="combo-input"
+                                                placeholder="🔍 Search products..."
+                                                value={productSearch}
+                                                onFocus={() => setDropdownOpen(true)}
+                                                onBlur={() => setTimeout(() => setDropdownOpen(false), 150)}
+                                                onChange={(e) => {
+                                                    setProductSearch(e.target.value);
+                                                    setSelectedProductId(null);
+                                                    setDropdownOpen(true);
+                                                }}
+                                            />
+                                            {dropdownOpen && (
+                                                <div className="combo-list">
+                                                    {dropdownMatches.length === 0 ? (
+                                                        <div className="combo-empty">No products match "{productSearch}"</div>
+                                                    ) : (
+                                                        dropdownMatches.map(p => (
+                                                            <div
+                                                                key={p.id}
+                                                                className="combo-item"
+                                                                onClick={() => selectProductForEdit(p)}
+                                                            >
+                                                                {p.name}
+                                                                <span className="ci-cat">{p.category || 'Other'} · ₹{p.offer_price || p.mrp} · {p.stock} in stock</span>
+                                                            </div>
+                                                        ))
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {selectedProductId && (
+                                            <>
+                                                <div className="selected-chip">
+                                                    ✅ {products.find(p => p.id === selectedProductId)?.name}
+                                                </div>
+
+                                                <div className="edit-grid">
+                                                    <div className="edit-field">
+                                                        <label>MRP (₹)</label>
+                                                        <input
+                                                            type="number"
+                                                            inputMode="decimal"
+                                                            value={editMrp}
+                                                            onChange={(e) => setEditMrp(e.target.value)}
+                                                        />
+                                                    </div>
+                                                    <div className="edit-field">
+                                                        <label>Offer (₹)</label>
+                                                        <input
+                                                            type="number"
+                                                            inputMode="decimal"
+                                                            value={editOfferPrice}
+                                                            onChange={(e) => setEditOfferPrice(e.target.value)}
+                                                        />
+                                                    </div>
+                                                    <div className="edit-field">
+                                                        <label>Stock</label>
+                                                        <input
+                                                            type="number"
+                                                            inputMode="numeric"
+                                                            value={editStock}
+                                                            onChange={(e) => setEditStock(e.target.value)}
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                <button className="save-single-btn" onClick={handleSingleUpdate}>
+                                                    💾 Save Update
+                                                </button>
+                                                <button
+                                                    className="admin-btn"
+                                                    style={{ width: '100%', marginTop: '8px', background: '#9CA3AF' }}
+                                                    onClick={resetSingleForm}
+                                                >
+                                                    Cancel
+                                                </button>
+                                            </>
+                                        )}
+                                    </div>
+                                )}
+
+                                {updateMode === 'bulk' && (
+                                    <>
+                                        <div className="upload-section">
+                                            <label>Upload CSV with Price & Stock Updates</label>
+                                            <p style={{ fontSize: '12px', color: '#6B7280', marginBottom: '8px' }}>
+                                                CSV columns: name, category, mrp, offer_price, stock
+                                            </p>
+                                            <input
+                                                type="file"
+                                                accept=".csv"
+                                                className="file-input"
+                                                onChange={handleCSVUpload}
+                                            />
+                                        </div>
+
+                                        <div className="upload-section" style={{ marginTop: '1rem' }}>
+                                            <label>Reset / Reload Catalog</label>
+                                            <p style={{ fontSize: '12px', color: '#6B7280', marginBottom: '8px' }}>
+                                                Reloads all products & categories from products.json and re-syncs localStorage + Firebase. Use this if the site is showing old categories.
+                                            </p>
+                                            <button className="admin-btn" style={{ width: '100%' }} onClick={handleReloadFromFile}>
+                                                🔄 Reload from products.json
+                                            </button>
+                                        </div>
+                                    </>
+                                )}
 
                                 <div>
                                     <h3 style={{ fontSize: '16px', marginTop: '1.5rem', marginBottom: '1rem', color: '#1F2937' }}>
