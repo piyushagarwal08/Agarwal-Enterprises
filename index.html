@@ -786,29 +786,74 @@
 
             const ADMIN_PASSWORD = 'admin123';
 
+            // The 10 canonical categories (from products.json) that must ALWAYS show as filters
+            const CANONICAL_CATEGORIES = [
+                'Ayurvedic Medicines',
+                'Body & Bath Care',
+                'Grocery & Staples',
+                'Hair Care',
+                'Health Supplements & Wellness',
+                'Oral Care',
+                'Packaged Foods & Beverages',
+                'Pooja & Household',
+                'Skin & Face Care',
+                'Spices & Cooking Essentials'
+            ];
+
+            // Build the filter list: the 10 canonical categories are always present,
+            // plus any extra categories found in the current products, sorted.
+            const mergeCats = (productsList) =>
+                [...new Set([...CANONICAL_CATEGORIES, ...productsList.map(p => p.category || 'Other')])].sort();
+
             React.useEffect(() => {
                 const loadProducts = async () => {
+                    // Read products.json once — gives us the canonical category list AND a file fallback
+                    let canonicalCats = CANONICAL_CATEGORIES.slice();
+                    let fileProducts = [];
                     try {
-                        // PRIORITY 1: Check localStorage (CSV updates take priority)
-                        const savedData = localStorage.getItem('agarwal_products');
-                        if (savedData) {
+                        const resp = await fetch('products.json?t=' + Date.now());
+                        const fileData = await resp.json();
+                        fileProducts = Array.isArray(fileData) ? fileData : (fileData.products || []);
+                        const fileCats = [...new Set(fileProducts.map(p => p.category || 'Other'))];
+                        if (fileCats.length) canonicalCats = fileCats;
+                    } catch (e) {
+                        console.log('products.json not read; using built-in category list');
+                    }
+
+                    const applyProducts = (productsList) => {
+                        setProducts(productsList);
+                        const merged = [...new Set([...canonicalCats, ...productsList.map(p => p.category || 'Other')])].sort();
+                        setCategories(['All', ...merged]);
+                    };
+                    const saveLocal = (productsList) => {
+                        localStorage.setItem('agarwal_products', JSON.stringify({
+                            products: productsList,
+                            categories: [...new Set(productsList.map(p => p.category || 'Other'))].sort()
+                        }));
+                    };
+
+                    // Ensure Firebase has the canonical categories stored (add if required) — fire & forget
+                    if (window.firebaseDb) {
+                        (async () => {
                             try {
-                                const parsed = JSON.parse(savedData);
-                                const productsList = Array.isArray(parsed) ? parsed : (parsed.products || []);
-                                if (productsList.length > 0) {
-                                    setProducts(productsList);
-                                    const uniqueCategories = [...new Set(productsList.map(p => p.category || 'Other'))];
-                                    setCategories(['All', ...uniqueCategories.sort()]);
-                                    console.log('✅ Loaded products from localStorage (CSV updates preserved)');
-                                    return;
+                                const snap = await window.firebaseDb.ref('categories').once('value');
+                                const raw = snap.exists() ? snap.val() : [];
+                                const existing = Array.isArray(raw) ? raw : Object.values(raw || {});
+                                const merged = [...new Set([...existing, ...canonicalCats])].sort();
+                                if (merged.length !== existing.length) {
+                                    await window.firebaseDb.ref('categories').set(merged);
+                                    console.log('✅ Canonical categories added to Firebase');
                                 }
                             } catch (e) {
-                                console.log('localStorage data invalid, trying Firebase');
+                                console.log('Category sync to Firebase skipped:', e.message);
                             }
-                        }
-                        
-                        // PRIORITY 2: Load from Firebase (cross-device sync)
+                        })();
+                    }
+
+                    try {
+                        // PRIORITY 1: Firebase FIRST on every device (latest cross-device data)
                         if (window.firebaseDb) {
+                            let fbReadOk = false, fbList = null;
                             try {
                                 const snapshot = await new Promise((resolve, reject) => {
                                     const timeout = setTimeout(() => reject(new Error('Firebase timeout')), 5000);
@@ -820,47 +865,70 @@
                                         reject(error);
                                     });
                                 });
-                                
+                                fbReadOk = true;
                                 if (snapshot.exists()) {
-                                    const productsList = snapshot.val();
-                                    setProducts(productsList);
-                                    const uniqueCategories = [...new Set(productsList.map(p => p.category || 'Other'))];
-                                    setCategories(['All', ...uniqueCategories.sort()]);
-                                    console.log('✅ Loaded products from Firebase (real-time synced)');
-                                    return;
+                                    const val = snapshot.val();
+                                    fbList = Array.isArray(val) ? val.filter(Boolean) : Object.values(val);
                                 }
                             } catch (error) {
-                                console.log('Firebase not available, trying products.json:', error.message);
+                                console.log('Firebase read failed, will try local/file:', error.message);
+                            }
+
+                            if (fbList && fbList.length) {
+                                applyProducts(fbList);
+                                saveLocal(fbList); // keep this device's copy in sync
+                                console.log('✅ Loaded products from Firebase (latest, cross-device)');
+                                return;
+                            }
+
+                            // Firebase reachable but empty -> seed it from the file (first-run setup)
+                            if (fbReadOk && fileProducts.length) {
+                                applyProducts(fileProducts);
+                                saveLocal(fileProducts);
+                                try {
+                                    await window.firebaseDb.ref('products').set(fileProducts);
+                                    console.log('✅ Seeded Firebase from products.json');
+                                } catch (e) {
+                                    console.log('Could not seed Firebase:', e.message);
+                                }
+                                return;
                             }
                         }
-                        
-                        // PRIORITY 3: Fallback to products.json file
-                        const response = await fetch('products.json');
-                        const data = await response.json();
-                        const productsList = Array.isArray(data) ? data : (data.products || []);
-                        
-                        setProducts(productsList);
-                        
-                        const uniqueCategories = [...new Set(productsList.map(p => p.category || 'Other'))];
-                        setCategories(['All', ...uniqueCategories.sort()]);
-                        console.log('✅ Loaded products from products.json');
+
+                        // PRIORITY 2: localStorage (offline / Firebase unreachable)
+                        const savedData = localStorage.getItem('agarwal_products');
+                        if (savedData) {
+                            try {
+                                const parsed = JSON.parse(savedData);
+                                const productsList = Array.isArray(parsed) ? parsed : (parsed.products || []);
+                                if (productsList.length > 0) {
+                                    applyProducts(productsList);
+                                    console.log('✅ Loaded products from local copy (Firebase unreachable)');
+                                    return;
+                                }
+                            } catch (e) {
+                                console.log('Local copy invalid, trying file');
+                            }
+                        }
+
+                        // PRIORITY 3: products.json file
+                        if (fileProducts.length) {
+                            applyProducts(fileProducts);
+                            saveLocal(fileProducts);
+                            console.log('✅ Loaded products from products.json');
+                            return;
+                        }
+                        throw new Error('No product data available from any source');
                     } catch (error) {
                         console.error('Error loading products:', error);
                         alert('Products not loaded. Using sample data.');
                         const sampleProducts = [
-                            { id: 1, name: 'PAT NUTRELA ORG OMEGA 3 6 7 9', category: 'Patanjali Nutrela', mrp: 551, offer_price: 499, stock: 55 },
-                            { id: 2, name: 'PAPAD KALI MIRCH - T', category: 'PAPAD', mrp: 55, offer_price: 49, stock: 16 },
-                            { id: 3, name: 'CHANA DAL 500 GM (R1)', category: 'PULSES', mrp: 65, offer_price: 59, stock: 6 },
-                            { id: 4, name: 'MOONG SABUT 500 GM (R1)', category: 'PULSES', mrp: 80, offer_price: 72, stock: 6 },
-                            { id: 5, name: 'RICE BRAN OIL 1 LTR (B) - T', category: 'RICE BRAN OIL', mrp: 180, offer_price: 162, stock: 15 },
-                            { id: 6, name: 'VIRGIN COCONUT OIL 500 ML (B) - T', category: 'VIRGIN COCONUT OIL', mrp: 365, offer_price: 329, stock: 17 },
-                            { id: 7, name: 'POHA 500 GM -T', category: 'POHA', mrp: 45, offer_price: 40, stock: 7 },
-                            { id: 8, name: 'VERMICELLI ROASTED 400 GM - T', category: 'VERMICELLI', mrp: 45, offer_price: 40, stock: 30 },
-                            { id: 9, name: 'SESAME OIL 1 L (B)-T', category: 'SESAME OIL', mrp: 260, offer_price: 234, stock: 12 },
-                            { id: 10, name: 'KALA NAMAK 200 GM - T', category: 'NAMAK', mrp: 15, offer_price: 13, stock: 112 },
+                            { id: 1, name: 'PAT NUTRELA ORG OMEGA 3 6 7 9', category: 'Health Supplements & Wellness', mrp: 551, offer_price: 499, stock: 55 },
+                            { id: 2, name: 'PAPAD KALI MIRCH - T', category: 'Grocery & Staples', mrp: 55, offer_price: 49, stock: 16 },
+                            { id: 3, name: 'CHANA DAL 500 GM (R1)', category: 'Grocery & Staples', mrp: 65, offer_price: 59, stock: 6 },
                         ];
                         setProducts(sampleProducts);
-                        setCategories(['All', 'Patanjali Nutrela', 'PAPAD', 'PULSES', 'RICE BRAN OIL', 'VIRGIN COCONUT OIL', 'POHA', 'VERMICELLI', 'SESAME OIL', 'NAMAK']);
+                        setCategories(['All', ...CANONICAL_CATEGORIES]);
                     } finally {
                         setLoading(false);
                     }
@@ -972,7 +1040,7 @@
             // Shared persistence: updates state, categories, localStorage, and Firebase
             const persistProducts = async (updatedProducts, successMsg, closeAfter) => {
                 setProducts(updatedProducts);
-                const uniqueCategories = [...new Set(updatedProducts.map(p => p.category || 'Other'))].sort();
+                const uniqueCategories = mergeCats(updatedProducts);
                 setCategories(['All', ...uniqueCategories]);
 
                 localStorage.setItem('agarwal_products', JSON.stringify({
@@ -1090,16 +1158,15 @@
                         
                         setProducts(updatedProducts);
                         
-                        // Regenerate categories from updated products
-                        const uniqueCategories = [...new Set(updatedProducts.map(p => p.category || 'Other'))];
-                        setCategories(['All', ...uniqueCategories.sort()]);
+                        // Regenerate categories — keep the canonical 10 always present
+                        const uniqueCategories = mergeCats(updatedProducts);
+                        setCategories(['All', ...uniqueCategories]);
                         setSelectedCategory('All');
                         
                         // Save to localStorage (immediate)
-                        // Save to localStorage (immediate)
                         localStorage.setItem('agarwal_products', JSON.stringify({
                             products: updatedProducts,
-                            categories: uniqueCategories.sort()
+                            categories: uniqueCategories
                         }));
                         
                         // Save to Firebase (cross-device sync)
@@ -1125,9 +1192,66 @@
                 });
             };
 
+            // REFRESH LATEST: loads the most recent SAVED data (includes CSV rate updates).
+            // Priority: Firebase (latest, cross-device) -> localStorage -> products.json (only if nothing saved yet)
+            const handleRefreshLatest = async () => {
+                const applyList = (productsList, sourceLabel) => {
+                    const uniqueCategories = mergeCats(productsList);
+                    setProducts(productsList);
+                    setCategories(['All', ...uniqueCategories]);
+                    setSelectedCategory('All');
+                    localStorage.setItem('agarwal_products', JSON.stringify({
+                        products: productsList,
+                        categories: uniqueCategories
+                    }));
+                    alert(`✅ Loaded ${productsList.length} products (latest data from ${sourceLabel}).\n\nCategories: ${uniqueCategories.length}`);
+                    setShowAdmin(false);
+                };
+
+                try {
+                    // Step 1: Firebase = the latest cross-device data, including CSV rate updates
+                    if (window.firebaseDb) {
+                        try {
+                            const snapshot = await new Promise((resolve, reject) => {
+                                const timeout = setTimeout(() => reject(new Error('Firebase timeout')), 5000);
+                                window.firebaseDb.ref('products').once('value', (snap) => {
+                                    clearTimeout(timeout); resolve(snap);
+                                }, (error) => { clearTimeout(timeout); reject(error); });
+                            });
+                            if (snapshot.exists()) {
+                                const val = snapshot.val();
+                                const arr = Array.isArray(val) ? val.filter(Boolean) : Object.values(val);
+                                if (arr.length) { applyList(arr, 'Firebase (synced)'); return; }
+                            }
+                        } catch (e) {
+                            console.log('Firebase refresh failed, trying localStorage:', e.message);
+                        }
+                    }
+
+                    // Step 2: localStorage = latest data saved on this device
+                    const saved = localStorage.getItem('agarwal_products');
+                    if (saved) {
+                        try {
+                            const parsed = JSON.parse(saved);
+                            const productsList = Array.isArray(parsed) ? parsed : (parsed.products || []);
+                            if (productsList.length) { applyList(productsList, 'this device'); return; }
+                        } catch (e) { /* fall through */ }
+                    }
+
+                    // Step 3: Fallback: original file (only when nothing has ever been saved)
+                    const response = await fetch('products.json?t=' + Date.now());
+                    const data = await response.json();
+                    const productsList = Array.isArray(data) ? data : (data.products || []);
+                    if (!productsList.length) { alert('❌ No saved data found and products.json is empty.'); return; }
+                    applyList(productsList, 'products.json file');
+                } catch (err) {
+                    alert('❌ Could not refresh data: ' + err.message);
+                }
+            };
+
             // RELOAD FROM FILE: clears cached data and reloads products.json, then re-syncs
             const handleReloadFromFile = async () => {
-                if (!window.confirm('Reload all products from products.json?\n\nThis overwrites the cached data (localStorage + Firebase) with the file contents.')) {
+                if (!window.confirm('⚠️ Reset to the ORIGINAL products.json?\n\nThis DISCARDS all CSV rate updates and single edits, overwriting both this device and Firebase with the original file.\n\nOnly use this to recover from corrupted data.')) {
                     return;
                 }
                 try {
@@ -1138,7 +1262,7 @@
                         alert('❌ products.json is empty or could not be read.');
                         return;
                     }
-                    const uniqueCategories = [...new Set(productsList.map(p => p.category || 'Other'))].sort();
+                    const uniqueCategories = mergeCats(productsList);
 
                     setProducts(productsList);
                     setCategories(['All', ...uniqueCategories]);
@@ -1558,12 +1682,26 @@
                                         </div>
 
                                         <div className="upload-section" style={{ marginTop: '1rem' }}>
-                                            <label>Reset / Reload Catalog</label>
+                                            <label>Refresh Latest Data</label>
                                             <p style={{ fontSize: '12px', color: '#6B7280', marginBottom: '8px' }}>
-                                                Reloads all products & categories from products.json and re-syncs localStorage + Firebase. Use this if the site is showing old categories.
+                                                Reloads the most recent saved data — including your latest CSV rate updates — from Firebase, syncing this device with the newest prices and stock.
                                             </p>
-                                            <button className="admin-btn" style={{ width: '100%' }} onClick={handleReloadFromFile}>
-                                                🔄 Reload from products.json
+                                            <button className="admin-btn" style={{ width: '100%' }} onClick={handleRefreshLatest}>
+                                                🔄 Refresh Latest Data
+                                            </button>
+                                        </div>
+
+                                        <div className="upload-section" style={{ marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px dashed #E5E7EB' }}>
+                                            <label style={{ color: '#B91C1C' }}>Danger: Reset to Original File</label>
+                                            <p style={{ fontSize: '12px', color: '#6B7280', marginBottom: '8px' }}>
+                                                Discards ALL CSV updates and single edits, restoring the original products.json on every device. Use only to recover from corrupted data.
+                                            </p>
+                                            <button
+                                                className="admin-btn"
+                                                style={{ width: '100%', background: '#EF4444' }}
+                                                onClick={handleReloadFromFile}
+                                            >
+                                                ♻️ Reset to original products.json
                                             </button>
                                         </div>
                                     </>
