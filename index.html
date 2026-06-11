@@ -923,9 +923,9 @@
                         console.error('Error loading products:', error);
                         alert('Products not loaded. Using sample data.');
                         const sampleProducts = [
-                            { id: 1, name: 'PAT NUTRELA ORG OMEGA 3 6 7 9', category: 'Health Supplements & Wellness', mrp: 551, offer_price: 499, stock: 55 },
-                            { id: 2, name: 'PAPAD KALI MIRCH - T', category: 'Grocery & Staples', mrp: 55, offer_price: 49, stock: 16 },
-                            { id: 3, name: 'CHANA DAL 500 GM (R1)', category: 'Grocery & Staples', mrp: 65, offer_price: 59, stock: 6 },
+                            { id: 1, name: 'PAT NUTRELA ORG OMEGA 3 6 7 9', item_code: '150000303', category: 'Health Supplements & Wellness', mrp: 551, offer_price: 499, stock: 55 },
+                            { id: 2, name: 'PAPAD KALI MIRCH - T', item_code: null, category: 'Grocery & Staples', mrp: 55, offer_price: 49, stock: 16 },
+                            { id: 3, name: 'CHANA DAL 500 GM (R1)', item_code: '150000718', category: 'Grocery & Staples', mrp: 65, offer_price: 59, stock: 6 },
                         ];
                         setProducts(sampleProducts);
                         setCategories(['All', ...CANONICAL_CATEGORIES]);
@@ -1124,7 +1124,7 @@
 
                 await persistProducts(
                     updatedProducts,
-                    `✅ Updated "${target.name}"\n\nMRP: ₹${mrpVal}\nOffer Price: ₹${offerVal}\nStock: ${stockVal} units`,
+                    `✅ Updated "${target.name}"${target.item_code ? ' (Code ' + target.item_code + ')' : ''}\n\nMRP: ₹${mrpVal}\nOffer Price: ₹${offerVal}\nStock: ${stockVal} units`,
                     false // keep panel open so you can update more products
                 );
                 resetSingleForm();
@@ -1133,61 +1133,119 @@
             const handleCSVUpload = (event) => {
                 const file = event.target.files[0];
                 if (!file) return;
+                // allow re-uploading the same file later
+                const inputEl = event.target;
 
                 Papa.parse(file, {
                     header: true,
+                    skipEmptyLines: true,
+                    transformHeader: (h) => String(h || '').trim().toLowerCase(),
                     complete: (results) => {
-                        let updatedCount = 0;
-                        const updatedProducts = products.map(product => {
-                            const csvRow = results.data.find(row => 
-                                row.name && row.name.trim().toLowerCase() === product.name.toLowerCase()
-                            );
-                            if (csvRow) {
-                                updatedCount++;
-                                return {
-                                    ...product,
-                                    name: csvRow.name ? csvRow.name : product.name,
-                                    category: csvRow.category ? csvRow.category : product.category,
-                                    mrp: csvRow.mrp ? parseFloat(csvRow.mrp) : product.mrp,
-                                    offer_price: csvRow.offer_price ? parseFloat(csvRow.offer_price) : (product.offer_price || product.mrp),
-                                    stock: csvRow.stock ? parseInt(csvRow.stock) : product.stock
-                                };
-                            }
-                            return product;
+                        const norm = (v) => (v == null ? '' : String(v).trim());
+                        // A CSV value is "provided" only if it's a non-empty string.
+                        // Missing/blank => keep the product's existing (Firebase/local) value.
+                        const has = (v) => norm(v) !== '';
+                        const numOrKeep = (v, fallback, asInt) => {
+                            if (!has(v)) return fallback;
+                            const n = asInt ? parseInt(v, 10) : parseFloat(v);
+                            return (isNaN(n) || n < 0) ? fallback : n;
+                        };
+
+                        const rows = (results.data || []).filter(r => r && has(r.item_code));
+                        if (rows.length === 0) {
+                            alert('No usable rows found.\n\nThe CSV must include an "item_code" column with values.\nExpected columns: item_code, name, category, mrp, offer_price, stock');
+                            if (inputEl) inputEl.value = '';
+                            return;
+                        }
+
+                        // Index current products by item_code for O(1) lookup
+                        const productByCode = new Map();
+                        products.forEach(p => {
+                            const c = norm(p.item_code);
+                            if (c) productByCode.set(c, p);
                         });
-                        
+
+                        // Build the set of codes we successfully updated
+                        const updatesByCode = new Map(); // code -> merged product
+                        const matchedCodes = [];
+                        const unmatchedRows = []; // { code, name }
+
+                        rows.forEach(row => {
+                            const code = norm(row.item_code);
+                            const product = productByCode.get(code);
+                            if (!product) {
+                                unmatchedRows.push({ code, name: norm(row.name) });
+                                return;
+                            }
+                            // Missing CSV fields fall back to the product's existing values
+                            const merged = {
+                                ...product,
+                                name: has(row.name) ? norm(row.name) : product.name,
+                                category: has(row.category) ? norm(row.category) : product.category,
+                                mrp: numOrKeep(row.mrp, product.mrp, false),
+                                offer_price: numOrKeep(row.offer_price, (product.offer_price != null ? product.offer_price : product.mrp), false),
+                                stock: numOrKeep(row.stock, product.stock, true)
+                            };
+                            updatesByCode.set(code, merged);
+                            matchedCodes.push(code);
+                        });
+
+                        const updatedCount = updatesByCode.size;
+
+                        if (updatedCount === 0) {
+                            const preview = unmatchedRows.slice(0, 30)
+                                .map(u => `• ${u.code}${u.name ? ' (' + u.name + ')' : ''}`).join('\n');
+                            alert(`❌ No products were updated.\n\nNone of the ${unmatchedRows.length} item_code(s) in the CSV matched a product.\n\nUnmatched item codes:\n${preview}${unmatchedRows.length > 30 ? `\n…and ${unmatchedRows.length - 30} more` : ''}`);
+                            if (inputEl) inputEl.value = '';
+                            return;
+                        }
+
+                        const updatedProducts = products.map(p => {
+                            const c = norm(p.item_code);
+                            return (c && updatesByCode.has(c)) ? updatesByCode.get(c) : p;
+                        });
+
                         setProducts(updatedProducts);
-                        
-                        // Regenerate categories — keep the canonical 10 always present
+
                         const uniqueCategories = mergeCats(updatedProducts);
                         setCategories(['All', ...uniqueCategories]);
                         setSelectedCategory('All');
-                        
-                        // Save to localStorage (immediate)
+
                         localStorage.setItem('agarwal_products', JSON.stringify({
                             products: updatedProducts,
                             categories: uniqueCategories
                         }));
-                        
-                        // Save to Firebase (cross-device sync)
+
+                        // Build the "not updated" report for the user
+                        const buildReport = () => {
+                            if (unmatchedRows.length === 0) return '';
+                            const preview = unmatchedRows.slice(0, 25)
+                                .map(u => `• ${u.code}${u.name ? ' (' + u.name + ')' : ''}`).join('\n');
+                            return `\n\n⚠️ ${unmatchedRows.length} row(s) were NOT updated — their item_code did not match any product:\n${preview}${unmatchedRows.length > 25 ? `\n…and ${unmatchedRows.length - 25} more` : ''}`;
+                        };
+
                         const saveToFirebase = async () => {
+                            const report = buildReport();
                             try {
                                 if (window.firebaseDb) {
                                     await window.firebaseDb.ref('products').set(updatedProducts);
-                                    alert(`✅ Updated ${updatedCount} products!\n\n✅ FIREBASE SYNCED!\n\nAll devices now see updated prices!\n\nTime: ${new Date().toLocaleString()}`);
+                                    alert(`✅ Updated ${updatedCount} product(s)!\n\n✅ FIREBASE SYNCED — all devices now see the new prices/stock.\nTime: ${new Date().toLocaleString()}${report}`);
                                 } else {
-                                    alert(`✅ Updated ${updatedCount} products locally!\n\n⚠️ Firebase not configured.\nChanges saved in localStorage.\n\nConfigure Firebase for cross-device sync.`);
+                                    alert(`✅ Updated ${updatedCount} product(s) locally!\n\n⚠️ Firebase not configured — saved on this device only.${report}`);
                                 }
                             } catch (error) {
-                                alert(`✅ Updated ${updatedCount} products locally!\n\n⚠️ Firebase sync failed: ${error.message}\n\nChanges saved in browser.`);
+                                alert(`✅ Updated ${updatedCount} product(s) locally!\n\n⚠️ Firebase sync failed: ${error.message}\nSaved in this browser.${report}`);
                             }
-                            setShowAdmin(false);
+                            if (inputEl) inputEl.value = '';
+                            // keep the admin panel open if there were unmatched rows so the user can act on them
+                            if (unmatchedRows.length === 0) setShowAdmin(false);
                         };
-                        
+
                         saveToFirebase();
                     },
                     error: (err) => {
                         alert('Error parsing CSV: ' + err.message);
+                        if (inputEl) inputEl.value = '';
                     }
                 });
             };
@@ -1607,7 +1665,7 @@
                                                                 onMouseDown={(e) => { e.preventDefault(); selectProductForEdit(p); }}
                                                             >
                                                                 {p.name}
-                                                                <span className="ci-cat">{p.category || 'Other'} · ₹{p.offer_price || p.mrp} · {p.stock} in stock</span>
+                                                                <span className="ci-cat">{p.category || 'Other'} · {p.item_code ? 'Code ' + p.item_code + ' · ' : ''}₹{p.offer_price || p.mrp} · {p.stock} in stock</span>
                                                             </div>
                                                         ))
                                                     )}
@@ -1619,6 +1677,9 @@
                                             <>
                                                 <div className="selected-chip">
                                                     ✅ {products.find(p => p.id === selectedProductId)?.name}
+                                                    {products.find(p => p.id === selectedProductId)?.item_code
+                                                        ? ' · Code ' + products.find(p => p.id === selectedProductId).item_code
+                                                        : ''}
                                                 </div>
 
                                                 <div className="edit-grid">
@@ -1671,7 +1732,8 @@
                                         <div className="upload-section">
                                             <label>Upload CSV with Price & Stock Updates</label>
                                             <p style={{ fontSize: '12px', color: '#6B7280', marginBottom: '8px' }}>
-                                                CSV columns: name, category, mrp, offer_price, stock
+                                                Columns: <b>item_code</b>, name, category, mrp, offer_price, stock.<br/>
+                                                Rows are matched to products by <b>item_code</b>. Any blank cell keeps the product's existing value (from Firebase). Item codes that don't match a product are reported as "not updated".
                                             </p>
                                             <input
                                                 type="file"
