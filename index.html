@@ -1480,7 +1480,7 @@
                                                             <div
                                                                 key={p.id}
                                                                 className="combo-item"
-                                                                onClick={() => selectProductForEdit(p)}
+                                                                onMouseDown={(e) => { e.preventDefault(); selectProductForEdit(p); }}
                                                             >
                                                                 {p.name}
                                                                 <span className="ci-cat">{p.category || 'Other'} · ₹{p.offer_price || p.mrp} · {p.stock} in stock</span>
