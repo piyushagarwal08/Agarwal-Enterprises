@@ -9,7 +9,17 @@
     <meta name="theme-color" content="#10B981">
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone@7.24.7/babel.min.js"></script>
+    <script>
+        // Force the CLASSIC JSX runtime. Without this, newer Babel compiles JSX with the
+        // "automatic" runtime, which injects  import { jsx } from "react/jsx-runtime"  into
+        // the output. Babel then appends that as a normal <script>, and the browser throws
+        // "Cannot use import statement outside a module" (the blank-page bug). The classic
+        // runtime uses the global React.createElement instead, so no imports are emitted.
+        Babel.registerPreset('react-classic', {
+            presets: [[Babel.availablePresets['react'], { runtime: 'classic' }]]
+        });
+    </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     
 <!-- Firebase SDK (COMPAT VERSION - works with regular script tags) -->
@@ -41,32 +51,103 @@
 
     <style>
         :root {
-            --primary-green: #10B981;
-            --dark-green: #059669;
-            --light-green: #D1FAE5;
+            /* richer leaf green */
+            --primary-green: #16A34A;
+            --dark-green: #15803D;
+            --light-green: #DCFCE7;
             --pale-green: #F0FDF4;
             --sage: #78A59C;
-            --forest: #1F3A3A;
-            --text-primary: #1F2937;
-            --text-secondary: #6B7280;
-            --border: #E5E7EB;
+            --forest: #14342B;
+            --text-primary: #1F2A24;
+            --text-secondary: #586057;
+            --border: #EFE8DA;
+            /* warm cream backdrop */
+            --cream: #FFFBEB;
+            --cream-2: #FFF3E0;
+            --bg-mint: #FFF7ED;
+            --bg-sky: #FEF3E2;
+            --bg-sun: #FFFBEB;
+            --accent-lime: #22C55E;
+            /* saffron accents (Patanjali warmth) */
+            --saffron: #F97316;
+            --saffron-dark: #EA580C;
+            --saffron-light: #FFEDD5;
+            --amber: #FB923C;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
+        html { -webkit-tap-highlight-color: transparent; }
+
         body { 
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif; 
-            background: linear-gradient(135deg, var(--pale-green) 0%, #F3F4F6 100%);
+            background: linear-gradient(170deg, var(--cream) 0%, var(--bg-sky) 50%, #FFFFFF 100%);
+            background-attachment: fixed;
             color: var(--text-primary);
+            font-size: 17px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Top announcement strip */
+        .announce-bar {
+            background: linear-gradient(90deg, var(--saffron) 0%, var(--amber) 100%);
+            color: #FFFFFF;
+            font-size: 13px;
+            font-weight: 600;
+            text-align: center;
+            padding: 7px 12px;
+            letter-spacing: 0.01em;
         }
 
         .header { 
             background: linear-gradient(135deg, var(--primary-green) 0%, var(--dark-green) 100%); 
             color: white; 
             padding: 1.5rem; 
-            margin-bottom: 1rem;
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+            margin-bottom: 0;
+            box-shadow: 0 4px 14px rgba(21, 128, 61, 0.25);
+            position: relative;
+            overflow: hidden;
         }
+
+        /* subtle saffron glow in the header corner */
+        .header::after {
+            content: "";
+            position: absolute;
+            top: -40px;
+            right: -30px;
+            width: 160px;
+            height: 160px;
+            background: radial-gradient(circle, rgba(249,115,22,0.45), transparent 70%);
+            pointer-events: none;
+        }
+
+        /* Trust badges strip under header */
+        .trust-bar {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 12px 1rem;
+            background: var(--cream);
+            border-bottom: 1px solid var(--border);
+            scrollbar-width: none;
+        }
+        .trust-bar::-webkit-scrollbar { display: none; }
+
+        .trust-chip {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+            background: #FFFFFF;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            padding: 7px 13px;
+            font-size: 12.5px;
+            font-weight: 700;
+            color: var(--dark-green);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+        .trust-chip .tc-ico { font-size: 14px; }
 
         .header h1 { 
             font-size: 28px; 
@@ -82,7 +163,7 @@
         .top-nav {
             display: flex;
             gap: 10px;
-            padding: 0 1rem 1rem;
+            padding: 1rem 1rem 0.75rem;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
@@ -91,10 +172,10 @@
         .search-box {
             flex: 1;
             min-width: 200px;
-            padding: 10px 14px;
-            border: 1px solid var(--border);
+            padding: 14px 16px;
+            border: 2px solid var(--border);
             border-radius: 8px;
-            font-size: 14px;
+            font-size: 17px;
             background: white;
         }
 
@@ -132,13 +213,13 @@
         }
 
         .category-btn { 
-            padding: 8px 16px; 
+            padding: 11px 20px; 
             border: 1px solid var(--border); 
             border-radius: 20px; 
             background: white; 
             color: var(--text-secondary); 
-            font-weight: 500; 
-            font-size: 14px; 
+            font-weight: 600; 
+            font-size: 16px; 
             cursor: pointer; 
             white-space: nowrap; 
             transition: all 0.2s; 
@@ -153,37 +234,114 @@
 
         .products-container { 
             padding: 0 1rem 6rem; 
+            max-width: 1200px;
+            margin: 0 auto;
         }
 
+        /* Mobile-first: 2 per row */
         .products-grid { 
             display: grid; 
             grid-template-columns: repeat(2, 1fr); 
             gap: 12px; 
         }
 
+        /* Larger screens: fit as many ~200px cards as the width allows.
+           The number of columns is decided by the screen size, not fixed. */
+        @media (min-width: 700px) {
+            .products-grid {
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                gap: 16px;
+            }
+        }
+
         .product-card { 
-            background: white; 
-            border-radius: 10px; 
-            padding: 12px; 
-            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-            border-left: 3px solid var(--primary-green);
+            background: #FFFFFF; 
+            border-radius: 14px; 
+            padding: 10px; 
+            box-shadow: 0 2px 12px rgba(20, 52, 43, 0.07), 0 1px 3px rgba(0,0,0,0.04);
+            border: 1px solid var(--border);
+            border-top: 3px solid var(--saffron);
             transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
         }
 
         .product-card:active {
             transform: scale(0.98);
         }
 
+        /* --- Product image / placeholder --- */
+        .product-img {
+            position: relative;
+            width: clamp(82px, 32vw, 120px);
+            height: clamp(82px, 32vw, 120px);
+            margin: 0 auto 8px;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #FFFFFF;
+        }
+
+        .product-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+
+        /* Branded blank-canvas shown until a real photo is uploaded */
+        .product-img.placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            background:
+                radial-gradient(circle at 30% 25%, rgba(255,255,255,0.7), transparent 60%),
+                linear-gradient(135deg, var(--light-green) 0%, var(--saffron-light) 100%);
+        }
+
+        .product-img.placeholder .ph-leaf {
+            width: 34px;
+            height: 34px;
+            opacity: 0.85;
+        }
+
+        .product-img.placeholder .ph-label {
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: var(--dark-green);
+            opacity: 0.75;
+        }
+
+        .product-img .img-skeleton {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(100deg, #EEF2F0 30%, #F7FAF9 50%, #EEF2F0 70%);
+            background-size: 200% 100%;
+            animation: shimmer 1.2s linear infinite;
+        }
+
+        @keyframes shimmer {
+            from { background-position: 200% 0; }
+            to   { background-position: -200% 0; }
+        }
+
         .product-card h3 { 
-            font-size: 13px; 
-            font-weight: 600; 
+            font-size: 15px; 
+            font-weight: 700; 
             color: var(--text-primary); 
             margin-bottom: 4px; 
             line-height: 1.3;
+            white-space: normal;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+            text-align: center;
         }
 
         .product-card p { 
-            font-size: 11px; 
+            font-size: 14px; 
             color: var(--text-secondary); 
             margin-bottom: 6px; 
         }
@@ -191,20 +349,22 @@
         .price-info {
             display: flex;
             gap: 8px;
+            justify-content: center;
             margin-bottom: 8px;
             font-size: 12px;
+            min-height: 16px;
         }
 
         .mrp-price {
             text-decoration: line-through;
             color: var(--text-secondary);
-            font-size: 13px;
+            font-size: 15px;
         }
 
         .offer-price {
             color: var(--primary-green);
             font-weight: 700;
-            font-size: 16px;
+            font-size: 22px;
         }
 
         .cost-badge {
@@ -223,6 +383,7 @@
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
+            margin-top: auto;
         }
 
         .product-price { 
@@ -233,13 +394,13 @@
         }
 
         .add-btn { 
-            padding: 6px 12px; 
+            padding: 10px 18px; 
             background: var(--primary-green); 
             color: white; 
             border: none; 
-            border-radius: 6px; 
-            font-size: 12px; 
-            font-weight: 600; 
+            border-radius: 8px; 
+            font-size: 16px; 
+            font-weight: 700; 
             cursor: pointer; 
             transition: background 0.2s; 
         }
@@ -253,44 +414,124 @@
             cursor: not-allowed;
         }
 
+        /* On-card quantity stepper (shown once a product is in the cart) */
+        .card-stepper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--pale-green);
+            border: 2px solid var(--primary-green);
+            border-radius: 8px;
+            padding: 4px;
+        }
+
+        .card-stepper button {
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: var(--primary-green);
+            color: white;
+            border-radius: 6px;
+            font-size: 24px;
+            font-weight: 700;
+            line-height: 1;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card-stepper button:active {
+            background: var(--dark-green);
+        }
+
+        .card-stepper button:disabled {
+            background: #B7E4CF;
+            cursor: not-allowed;
+        }
+
+        .card-stepper .stepper-qty {
+            min-width: 26px;
+            text-align: center;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--forest);
+        }
+
+        /* Self-closing notification toast */
+        .toast {
+            position: fixed;
+            top: 18px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 50;
+            padding: 14px 22px;
+            border-radius: 12px;
+            font-size: 17px;
+            font-weight: 700;
+            color: white;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.22);
+            max-width: 90%;
+            text-align: center;
+            animation: toastIn 0.25s ease-out;
+        }
+
+        .toast-success { background: #10B981; }
+        .toast-info    { background: #2563EB; }
+        .toast-remove  { background: #EF4444; }
+
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateX(-50%) translateY(-16px); }
+            to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+
         .cart-fab { 
             position: fixed; 
-            bottom: 1rem; 
+            bottom: calc(1rem + env(safe-area-inset-bottom)); 
             right: 1rem; 
-            width: 56px; 
-            height: 56px; 
+            width: 64px; 
+            height: 64px; 
             border-radius: 50%; 
-            background: var(--primary-green); 
+            background: linear-gradient(135deg, var(--accent-lime) 0%, var(--dark-green) 100%); 
             color: white; 
-            border: none; 
+            border: 3px solid #FFFFFF; 
             display: flex; 
             align-items: center; 
             justify-content: center; 
-            font-size: 24px; 
             cursor: pointer; 
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4); 
+            box-shadow: 0 8px 22px rgba(5, 150, 105, 0.45); 
             z-index: 10; 
-            transition: transform 0.2s;
+            transition: transform 0.15s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .cart-fab svg {
+            width: 30px;
+            height: 30px;
+            display: block;
         }
 
         .cart-fab:active {
-            transform: scale(0.95);
+            transform: scale(0.94);
         }
 
         .cart-badge { 
             position: absolute; 
-            top: -8px; 
-            right: -8px; 
+            top: -6px; 
+            right: -6px; 
             background: #EF4444; 
             color: white; 
+            border: 2px solid #FFFFFF;
             border-radius: 50%; 
-            width: 28px; 
-            height: 28px; 
+            min-width: 26px; 
+            height: 26px; 
+            padding: 0 6px;
             display: flex; 
             align-items: center; 
             justify-content: center; 
-            font-size: 12px; 
-            font-weight: 700; 
+            font-size: 13px; 
+            font-weight: 800; 
+            box-shadow: 0 2px 6px rgba(0,0,0,0.25);
         }
 
         .cart-panel { 
@@ -323,7 +564,7 @@
 
         .cart-header h2 { 
             margin: 0; 
-            font-size: 18px; 
+            font-size: 22px; 
             font-weight: 700; 
             color: var(--primary-green);
         }
@@ -332,7 +573,7 @@
             background: none; 
             border: none; 
             cursor: pointer; 
-            font-size: 20px; 
+            font-size: 26px; 
         }
 
         .cart-content { 
@@ -343,19 +584,19 @@
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
-            padding: 12px 0; 
+            padding: 14px 0; 
             border-bottom: 1px solid var(--border); 
         }
 
         .item-details h4 { 
             margin: 0 0 4px; 
-            font-weight: 600; 
-            font-size: 13px; 
+            font-weight: 700; 
+            font-size: 16px; 
         }
 
         .item-details p { 
             margin: 0; 
-            font-size: 12px; 
+            font-size: 14px; 
             color: var(--text-secondary); 
         }
 
@@ -366,28 +607,30 @@
         }
 
         .qty-btn { 
-            width: 28px; 
-            height: 28px; 
-            border: 1px solid var(--border); 
+            width: 40px; 
+            height: 40px; 
+            border: 2px solid var(--primary-green); 
             background: white; 
-            border-radius: 4px; 
+            border-radius: 6px; 
             cursor: pointer; 
-            font-size: 14px; 
+            font-size: 22px; 
             color: var(--primary-green);
-            font-weight: 600;
+            font-weight: 700;
+            line-height: 1;
         }
 
         .qty-display { 
-            min-width: 24px; 
+            min-width: 30px; 
             text-align: center; 
-            font-weight: 600; 
+            font-weight: 700; 
+            font-size: 18px;
         }
 
         .item-price { 
             font-weight: 700; 
-            min-width: 60px; 
+            min-width: 64px; 
             text-align: right; 
-            font-size: 14px; 
+            font-size: 17px; 
             color: var(--primary-green);
         }
 
@@ -398,18 +641,18 @@
 
         .address-label { 
             display: block; 
-            font-size: 12px; 
+            font-size: 15px; 
             font-weight: 700; 
-            color: var(--text-secondary); 
+            color: var(--text-primary); 
             margin-bottom: 6px; 
         }
 
         .address-input { 
             width: 100%; 
-            padding: 10px; 
-            border: 1px solid var(--border); 
+            padding: 12px; 
+            border: 2px solid var(--border); 
             border-radius: 8px; 
-            font-size: 13px; 
+            font-size: 16px; 
             min-height: 70px; 
             resize: none; 
             font-family: inherit; 
@@ -425,30 +668,30 @@
             display: flex; 
             justify-content: space-between; 
             margin-bottom: 12px; 
-            font-size: 14px; 
-            font-weight: 600;
+            font-size: 18px; 
+            font-weight: 700;
         }
 
         .total-amount {
             color: var(--primary-green);
-            font-size: 16px;
+            font-size: 22px;
         }
 
         .footer-note { 
             margin: 8px 0 0; 
-            font-size: 11px; 
+            font-size: 13px; 
             color: var(--text-secondary); 
         }
 
         .whatsapp-btn { 
             width: 100%; 
-            padding: 12px; 
+            padding: 16px; 
             background: #25D366; 
             color: white; 
             border: none; 
             border-radius: 8px; 
             font-weight: 700; 
-            font-size: 14px; 
+            font-size: 18px; 
             cursor: pointer; 
             margin-top: 12px; 
             transition: opacity 0.2s; 
@@ -735,34 +978,147 @@
             background: var(--dark-green);
         }
 
+        /* hide the category scrollbar but keep it swipeable */
+        .categories::-webkit-scrollbar { display: none; }
+        .categories { -ms-overflow-style: none; scrollbar-width: none; }
+
         @media (max-width: 640px) {
-            .products-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
+            body { font-size: 16px; }
 
-            .top-nav {
-                flex-direction: column;
-                gap: 8px;
-            }
-
-            .modal-content {
-                padding: 1.5rem;
+            .header {
+                padding: 1.1rem 1rem;
             }
 
             .header h1 {
-                font-size: 24px;
+                font-size: 21px;
+                line-height: 1.25;
             }
+
+            .header p { font-size: 13px; }
+
+            .top-nav {
+                flex-direction: row;
+                flex-wrap: wrap;
+                padding: 0.75rem 0.75rem 0.75rem;
+                gap: 8px;
+            }
+
+            .search-box {
+                flex: 1 1 100%;
+                font-size: 16px; /* keeps iOS from zooming on focus */
+                padding: 12px 14px;
+            }
+
+            .categories { padding: 0 0.75rem 0.75rem; }
+            .category-btn { padding: 9px 16px; font-size: 14px; }
+
+            .products-container { padding: 0 0.75rem 6rem; }
+            .products-grid { gap: 10px; }
+
+            .product-card { padding: 8px; border-radius: 12px; }
+            .product-card h3 { font-size: 14px; }
+            .offer-price { font-size: 19px; }
+
+            .add-btn { padding: 9px 14px; font-size: 15px; }
+            .card-stepper button { width: 36px; height: 36px; font-size: 22px; }
+            .card-stepper .stepper-qty { font-size: 18px; }
+
+            .modal-content { padding: 1.5rem; }
+        }
+
+        @media (max-width: 360px) {
+            .products-grid { gap: 8px; }
+            .product-card h3 { font-size: 13px; }
         }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
-    <script type="text/babel">
+    <script type="text/babel" data-presets="react-classic">
+        /* =========================================================
+           PRODUCT IMAGES
+           Drop photos into the "images" folder (next to this file),
+           named by the product's item_code, e.g.
+
+               images/150000303.jpg
+
+           jpg, jpeg, png and webp all work. Until a matching file
+           exists, a clean branded placeholder is shown instead.
+           ========================================================= */
+        const IMAGE_BASE = 'images/';
+        const IMAGE_EXTS = ['jpg', 'jpeg', 'png', 'webp'];
+
+        // Emoji shown on each category chip (best-effort match by keyword)
+        const CATEGORY_EMOJI = {
+            'All': '🏪',
+            'Ayurvedic Medicines': '🌿',
+            'Body & Bath Care': '🧴',
+            'Grocery & Staples': '🛒',
+            'Hair Care': '💇',
+            'Health Supplements & Wellness': '💊',
+            'Oral Care': '🪥',
+            'Packaged Foods & Beverages': '🍪',
+            'Pooja & Household': '🪔',
+            'Skin & Face Care': '🧖',
+            'Spices & Cooking Essentials': '🌶️'
+        };
+        const catEmoji = (cat) => CATEGORY_EMOJI[cat] || '🌿';
+
+        const LeafMark = () => (
+            <svg className="ph-leaf" viewBox="0 0 100 100" fill="none" aria-hidden="true">
+                <path d="M52 12 C74 30 68 62 40 82 C26 58 28 32 52 12 Z" fill="#10B981" opacity="0.9" />
+                <path d="M51 16 C50 42 47 62 41 80" stroke="#FFFFFF" strokeWidth="3" strokeLinecap="round" opacity="0.85" />
+            </svg>
+        );
+
+        const ProductImage = ({ product }) => {
+            const code = product.item_code;
+            const [extIdx, setExtIdx] = React.useState(0);
+            const [status, setStatus] = React.useState(code ? 'loading' : 'placeholder');
+
+            React.useEffect(() => {
+                setExtIdx(0);
+                setStatus(product.item_code ? 'loading' : 'placeholder');
+            }, [product.item_code]);
+
+            if (status === 'placeholder') {
+                return (
+                    <div className="product-img placeholder">
+                        <LeafMark />
+                        <span className="ph-label">Patanjali</span>
+                    </div>
+                );
+            }
+
+            const src = IMAGE_BASE + code + '.' + IMAGE_EXTS[extIdx];
+            return (
+                <div className="product-img">
+                    <img
+                        src={src}
+                        alt={product.name}
+                        loading="lazy"
+                        onLoad={() => setStatus('loaded')}
+                        onError={() => {
+                            if (extIdx < IMAGE_EXTS.length - 1) {
+                                setExtIdx(extIdx + 1);
+                            } else {
+                                setStatus('placeholder');
+                            }
+                        }}
+                    />
+                    {status === 'loading' && <div className="img-skeleton" />}
+                </div>
+            );
+        };
+
         const App = () => {
             const [selectedCategory, setSelectedCategory] = React.useState('All');
             const [cart, setCart] = React.useState([]);
             const [address, setAddress] = React.useState('');
+            const [customerName, setCustomerName] = React.useState('');
+            const [toast, setToast] = React.useState(null);
+            const toastTimer = React.useRef(null);
             const [showCart, setShowCart] = React.useState(false);
             const [showContact, setShowContact] = React.useState(false);
             const [showAdmin, setShowAdmin] = React.useState(false);
@@ -999,6 +1355,20 @@
                 });
             }, [products, selectedCategory, searchTerm]);
 
+            // Show a small notification that closes itself after a moment
+            const shortName = (n) => (n && n.length > 26 ? n.slice(0, 26) + '…' : n);
+            const showToast = (message, type) => {
+                setToast({ message, type: type || 'success' });
+                if (toastTimer.current) clearTimeout(toastTimer.current);
+                toastTimer.current = setTimeout(() => setToast(null), 2200);
+            };
+
+            // How many of this product are currently in the cart
+            const cartQty = (id) => {
+                const item = cart.find(i => i.id === id);
+                return item ? item.qty : 0;
+            };
+
             const addToCart = (product) => {
                 const existing = cart.find(item => item.id === product.id);
                 if (existing) {
@@ -1008,10 +1378,28 @@
                 } else {
                     setCart([...cart, { ...product, qty: 1 }]);
                 }
+                showToast('🛒 Added: ' + shortName(product.name), 'success');
+            };
+
+            // Reduce quantity by one; removes the product when it hits zero
+            const decrementItem = (product) => {
+                const existing = cart.find(item => item.id === product.id);
+                if (!existing) return;
+                if (existing.qty <= 1) {
+                    setCart(cart.filter(item => item.id !== product.id));
+                    showToast('❌ Removed: ' + shortName(product.name), 'remove');
+                } else {
+                    setCart(cart.map(item =>
+                        item.id === product.id ? { ...item, qty: item.qty - 1 } : item
+                    ));
+                    showToast('➖ Reduced: ' + shortName(product.name), 'info');
+                }
             };
 
             const removeFromCart = (id) => {
+                const existing = cart.find(item => item.id === id);
                 setCart(cart.filter(item => item.id !== id));
+                if (existing) showToast('❌ Removed: ' + shortName(existing.name), 'remove');
             };
 
             const updateQty = (id, qty) => {
@@ -1028,8 +1416,10 @@
 
             const generateWhatsAppMessage = () => {
                 let message = `*Order from Patanjali Mega Store (Jagatpura)*\n\n`;
+                if (customerName) message += `*Name:* ${customerName}\n\n`;
                 cart.forEach(item => {
-                    message += `${item.name} - ₹${item.offer_price} x ${item.qty} = ₹${item.offer_price * item.qty}\n`;
+                    const price = item.offer_price || item.mrp;
+                    message += `${item.name} - ₹${price} x ${item.qty} = ₹${price * item.qty}\n`;
                 });
                 message += `\n*Total: ₹${total}*\n`;
                 if (address) message += `\n*Delivery Address:*\n${address}`;
@@ -1348,18 +1738,32 @@
             };
 
             return (
-                <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #F0FDF4 0%, #F3F4F6 100%)' }}>
+                <div style={{ minHeight: '100vh', background: 'linear-gradient(170deg, #FFFBEB 0%, #FEF3E2 50%, #FFFFFF 100%)' }}>
+                    {toast && (
+                        <div className={`toast toast-${toast.type}`}>{toast.message}</div>
+                    )}
+                    <div className="announce-bar">
+                        🚚 Free delivery in Jagatpura &nbsp;·&nbsp; 🌿 100% Authentic Patanjali &nbsp;·&nbsp; 💬 Order on WhatsApp
+                    </div>
                     <div className="header">
                         <h1 onClick={handleSecretTap} style={{ userSelect: 'none', WebkitUserSelect: 'none', cursor: 'default' }}>🌿 Patanjali Mega Store (Jagatpura)</h1>
                         <p>Khasra No. 500/356 (Middle), Near KS Petrol Pump,</p>
                         <p>Near Mahima City Ville, Karolan Ka Barh, Jagatpura, Jaipur - 302017</p>
-                        <p style={{ marginTop: '0.5rem', fontStyle: 'italic', fontWeight: '500' }}>Authentic Patanjali Products, Delivered with Trust.</p>
+                        <p style={{ marginTop: '0.5rem', fontStyle: 'italic', fontWeight: '500' }}>Prakriti Ka Aashirwad 🌿 — Authentic Patanjali Products, Delivered with Trust.</p>
                         <button
                             onClick={() => setShowContact(true)}
-                            style={{ marginTop: '0.9rem', background: '#fff', color: '#10B981', border: 'none', padding: '0.6rem 1.5rem', borderRadius: '8px', fontWeight: 700, fontSize: '15px', cursor: 'pointer', boxShadow: '0 2px 6px rgba(0,0,0,0.15)' }}
+                            style={{ marginTop: '0.9rem', background: '#fff', color: '#15803D', border: 'none', padding: '0.6rem 1.5rem', borderRadius: '8px', fontWeight: 700, fontSize: '15px', cursor: 'pointer', boxShadow: '0 2px 6px rgba(0,0,0,0.15)' }}
                         >
                             📞 Contact Us
                         </button>
+                    </div>
+
+                    <div className="trust-bar">
+                        <span className="trust-chip"><span className="tc-ico">✅</span>{products.length || ''} Products</span>
+                        <span className="trust-chip"><span className="tc-ico">💯</span>100% Genuine</span>
+                        <span className="trust-chip"><span className="tc-ico">📦</span>Fresh Daily Stock</span>
+                        <span className="trust-chip"><span className="tc-ico">🚚</span>Free Local Delivery</span>
+                        <span className="trust-chip"><span className="tc-ico">💬</span>WhatsApp Orders</span>
                     </div>
 
                     <div className="top-nav">
@@ -1396,7 +1800,7 @@
                                             setSearchTerm('');
                                         }}
                                     >
-                                        {cat}
+                                        {catEmoji(cat)} {cat}
                                     </button>
                                 ))}
                             </div>
@@ -1411,9 +1815,11 @@
                                         {filteredProducts.map(product => {
                                             const offerPrice = product.offer_price || product.mrp;
                                             const showDiscount = offerPrice !== product.mrp;
+                                            const qtyInCart = cartQty(product.id);
                                             
                                             return (
                                             <div key={product.id} className="product-card">
+                                                <ProductImage product={product} />
                                                 <h3>{product.name}</h3>
                                                 <div className="price-info">
                                                     {showDiscount ? (
@@ -1429,13 +1835,28 @@
                                                     ) : (
                                                         <p className="offer-price">₹{product.mrp}</p>
                                                     )}
-                                                    <button 
-                                                        className="add-btn" 
-                                                        onClick={() => addToCart(product)}
-                                                        disabled={product.stock === 0}
-                                                    >
-                                                        Add +
-                                                    </button>
+                                                    {qtyInCart >= 1 ? (
+                                                        <div className="card-stepper">
+                                                            <button
+                                                                onClick={() => decrementItem(product)}
+                                                                aria-label="Remove one"
+                                                            >−</button>
+                                                            <span className="stepper-qty">{qtyInCart}</span>
+                                                            <button
+                                                                onClick={() => addToCart(product)}
+                                                                disabled={product.stock != null && qtyInCart >= product.stock}
+                                                                aria-label="Add one"
+                                                            >+</button>
+                                                        </div>
+                                                    ) : (
+                                                        <button 
+                                                            className="add-btn" 
+                                                            onClick={() => addToCart(product)}
+                                                            disabled={product.stock === 0}
+                                                        >
+                                                            Add +
+                                                        </button>
+                                                    )}
                                                 </div>
                                             </div>
                                             );
@@ -1477,8 +1898,12 @@
                     )}
 
                     {cart.length > 0 && (
-                        <button className="cart-fab" onClick={() => setShowCart(!showCart)}>
-                            🛒
+                        <button className="cart-fab" onClick={() => setShowCart(!showCart)} aria-label="Open cart">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <circle cx="9" cy="20" r="1.6" fill="#FFFFFF" stroke="none" />
+                                <circle cx="18" cy="20" r="1.6" fill="#FFFFFF" stroke="none" />
+                                <path d="M2 3h3l2.2 11.2a1.6 1.6 0 0 0 1.6 1.3h8.4a1.6 1.6 0 0 0 1.6-1.3L21.5 7H6" />
+                            </svg>
                             <span className="cart-badge">{cart.length}</span>
                         </button>
                     )}
@@ -1539,14 +1964,26 @@
                                                     <p>₹{offerPrice} each</p>
                                                 </div>
                                                 <div className="qty-controls">
-                                                    <button className="qty-btn" onClick={() => updateQty(item.id, item.qty - 1)}>−</button>
+                                                    <button className="qty-btn" onClick={() => decrementItem(item)}>−</button>
                                                     <span className="qty-display">{item.qty}</span>
-                                                    <button className="qty-btn" onClick={() => updateQty(item.id, item.qty + 1)}>+</button>
+                                                    <button className="qty-btn" onClick={() => addToCart(item)}>+</button>
                                                     <p className="item-price">₹{offerPrice * item.qty}</p>
                                                 </div>
                                             </div>
                                             );
                                         })}
+                                    </div>
+
+                                    <div className="address-section">
+                                        <label className="address-label">Your Name</label>
+                                        <input
+                                            type="text"
+                                            className="address-input"
+                                            style={{ minHeight: 'auto' }}
+                                            value={customerName}
+                                            onChange={(e) => setCustomerName(e.target.value)}
+                                            placeholder="Enter your name..."
+                                        />
                                     </div>
 
                                     <div className="address-section">
@@ -1568,7 +2005,7 @@
                                         <button
                                             className="whatsapp-btn"
                                             onClick={generateWhatsAppMessage}
-                                            disabled={!address}
+                                            disabled={!customerName.trim() || !address.trim()}
                                         >
                                             📱 Order via WhatsApp
                                         </button>
