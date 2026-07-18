@@ -5741,7 +5741,205 @@
       "mrp": 703,
       "offer_price": 675,
       "stock": 12
-    }
+    },
+  {
+    "category": "Health Supplements & Wellness",
+    "id": 639,
+    "item_code": "150001447",
+    "mrp": 699,
+    "name": "NUTRELA ASHWAGANDHA & MELATONIN GUMMIES",
+    "offer_price": 699,
+    "stock": 5
+  },
+  {
+    "category": "Packaged Foods & Beverages",
+    "id": 640,
+    "item_code": "150001119",
+    "mrp": 12,
+    "name": "ATTA NOODLES DESI MASALA 60 GM",
+    "offer_price": 12,
+    "stock": 5
+  },
+  {
+    "category": "Packaged Foods & Beverages",
+    "id": 641,
+    "item_code": "150001014",
+    "mrp": 50,
+    "name": "NARIYAL COOKIES 200 GM",
+    "offer_price": 50,
+    "stock": 23
+  },
+  {
+    "category": "Packaged Foods & Beverages",
+    "id": 642,
+    "item_code": "150001015",
+    "mrp": 50,
+    "name": "ATTA DOODH RUSK 300 GM",
+    "offer_price": 50,
+    "stock": 24
+  },
+  {
+    "category": "Packaged Foods & Beverages",
+    "id": 643,
+    "item_code": "150001016",
+    "mrp": 50,
+    "name": "SUJI ELAICHI RUSK 300 GM",
+    "offer_price": 50,
+    "stock": 21
+  },
+  {
+    "category": "Packaged Foods & Beverages",
+    "id": 644,
+    "item_code": "180005517",
+    "mrp": 10,
+    "name": "DOODH BISCUIT 70 GM",
+    "offer_price": 10,
+    "stock": 78
+  },
+  {
+    "category": "Packaged Foods & Beverages",
+    "id": 645,
+    "item_code": "180005623",
+    "mrp": 10,
+    "name": "JEERA BISCUIT 70 GM",
+    "offer_price": 10,
+    "stock": 78
+  },
+  {
+    "category": "Packaged Foods & Beverages",
+    "id": 646,
+    "item_code": "180026100",
+    "mrp": 10,
+    "name": "CREAMFEAST ORANGE BISCUIT 65 GM",
+    "offer_price": 10,
+    "stock": 78
+  },
+  {
+    "category": "Skin & Face Care",
+    "id": 647,
+    "item_code": "180026244",
+    "mrp": 95,
+    "name": "BEAUTY CREAM ADV.- 50 G",
+    "offer_price": 95,
+    "stock": 78
+  },
+  {
+    "category": "Hair Care",
+    "id": 648,
+    "item_code": "9954000108",
+    "mrp": 235,
+    "name": "COCONUT OIL - 500 ML (J)",
+    "offer_price": 235,
+    "stock": 78
+  },
+  {
+    "category": "Hair Care",
+    "id": 649,
+    "item_code": "150001648",
+    "mrp": 20,
+    "name": "KESH KANTI HERBAL MEHANDI (NAT. BLACK)-T",
+    "offer_price": 20,
+    "stock": 78
+  },
+  {
+    "category": "Packaged Foods & Beverages",
+    "id": 650,
+    "item_code": "180005258",
+    "mrp": 270,
+    "name": "MUNAKKA RAISIN 250 GM (MONO)",
+    "offer_price": 270,
+    "stock": 78
+  },
+  {
+    "category": "Packaged Foods & Beverages",
+    "id": 651,
+    "item_code": "180005257",
+    "mrp": 200,
+    "name": "RAISINS 250 GM (MONO)",
+    "offer_price": 200,
+    "stock": 78
+  },
+  {
+    "category": "Ayurvedic Medicines",
+    "id": 652,
+    "item_code": "8857000306",
+    "mrp": 130,
+    "name": "DIVYA PUNARNAVADI MANDOOR 120 N",
+    "offer_price": 130,
+    "stock": 78
+  },
+  {
+    "category": "Pooja & Household",
+    "id": 653,
+    "item_code": "180031262",
+    "mrp": 78,
+    "name": "HERBAL WASH DETERGENT POWDER- 900G",
+    "offer_price": 78,
+    "stock": 78
+  },
+  {
+    "category": "Health Supplements & Wellness",
+    "id": 654,
+    "item_code": "180002264",
+    "mrp": 533,
+    "name": "PATANJALI NUTRELA WOMEN'S SUPERFOOD",
+    "offer_price": 477,
+    "stock": 78
+  },
+  {
+    "category": "Ayurvedic Medicines",
+    "id": 655,
+    "item_code": "8857000063",
+    "mrp": 195,
+    "name": "DIVYA AROGYAVARDHANI VATI- 160 TAB",
+    "offer_price": 195,
+    "stock": 78
+  },
+  {
+    "category": "Skin & Face Care",
+    "id": 656,
+    "item_code": "DI52",
+    "mrp": 135,
+    "name": "COCONUT OIL 200 ML (J)",
+    "offer_price": 135,
+    "stock": 78
+  },
+  {
+    "category": "Ayurvedic Medicines",
+    "id": 657,
+    "item_code": "9958000052",
+    "mrp": 93,
+    "name": "NEEM GHAN VATI 60 TAB",
+    "offer_price": 93,
+    "stock": 78
+  },
+  {
+    "category": "Hair Care",
+    "id": 658,
+    "item_code": "DI60",
+    "mrp": 78,
+    "name": "HERBAL MEHNDI NAT. DARK BROWN",
+    "offer_price": 78,
+    "stock": 3
+  },
+  {
+    "category": "Grocery & Staples",
+    "id": 659,
+    "item_code": "DI61",
+    "mrp": 60,
+    "name": "MAKKA ATTA 1KG",
+    "offer_price": 60,
+    "stock": 5
+  },
+  {
+    "category": "Ayurvedic Medicines",
+    "id": 660,
+    "item_code": "8857000014",
+    "mrp": 56,
+    "name": "DIVYA JWAR NASHAK KWATH 100 G",
+    "offer_price": 56,
+    "stock": 5
+  }
   ],
   "categories": [
     "Ayurvedic Medicines",
