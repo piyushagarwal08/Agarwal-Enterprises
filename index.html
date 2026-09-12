@@ -551,7 +551,7 @@
             border-top-left-radius: 20px; 
             border-top-right-radius: 20px; 
             box-shadow: 0 -4px 20px rgba(0,0,0,0.15); 
-            z-index: 20; 
+            z-index: 200; 
             max-height: 80vh; 
             overflow-y: auto; 
             animation: slideUp 0.3s ease-out; 
@@ -1312,6 +1312,17 @@
                 window.addEventListener('keydown', handleKeyPress);
                 return () => window.removeEventListener('keydown', handleKeyPress);
             }, []);
+
+            // Lock background scrolling while the cart panel is open so the sticky
+            // search/category bar can't creep down over the name/address fields.
+            React.useEffect(() => {
+                if (showCart) {
+                    document.body.style.overflow = 'hidden';
+                } else {
+                    document.body.style.overflow = '';
+                }
+                return () => { document.body.style.overflow = ''; };
+            }, [showCart]);
 
             const handleAdminClick = () => {
                 if (isAdminLoggedIn) {
