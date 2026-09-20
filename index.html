@@ -726,7 +726,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 30;
+            z-index: 300;
             padding: 1rem;
         }
 
@@ -1120,6 +1120,59 @@
             );
         };
 
+        // Hindi / vernacular search aliases — lets a shopper type "methi dana" or "sarson tel"
+        // and still find "FENUGREEK SEED 100 GM" or "MUSTARD OIL 1 L". The product name shown
+        // on screen is never changed; this only widens what the search box matches against.
+        // Add more rules any time — { match: /PATTERN/i, aliases: ['hindi term', ...] }.
+        const SEARCH_ALIAS_RULES = [
+            { match: /FENUGREEK SEED/i, aliases: ['methi dana', 'methi'] },
+            { match: /FENNEL WHOLE/i, aliases: ['saunf'] },
+            { match: /BLACK PEPPER/i, aliases: ['kali mirch'] },
+            { match: /CAROM SEED/i, aliases: ['ajwain'] },
+            { match: /CORIANDER POWDER/i, aliases: ['dhaniya powder', 'dhania', 'dhaniya'] },
+            { match: /CORIANDER WHOLE/i, aliases: ['sabut dhaniya', 'dhania', 'dhaniya'] },
+            { match: /CUMIN SEED/i, aliases: ['jeera'] },
+            { match: /CUMIN WHOLE/i, aliases: ['sabut jeera', 'jeera'] },
+            { match: /TURMERIC POWDER/i, aliases: ['haldi', 'haldi powder'] },
+            { match: /RED CHILLI POWDER/i, aliases: ['lal mirch', 'mirch powder', 'mirchi'] },
+            { match: /LARGE CARDAMOM/i, aliases: ['badi elaichi'] },
+            { match: /SMALL CARDAMOM/i, aliases: ['chhoti elaichi', 'elaichi'] },
+            { match: /MUSTARD OIL/i, aliases: ['sarson tel', 'sarson ka tel', 'sarso tel'] },
+            { match: /COCONUT OIL/i, aliases: ['nariyal tel', 'nariyal ka tel'] },
+            { match: /GROUNDNUT OIL/i, aliases: ['mungfali tel', 'moongfali ka tel'] },
+            { match: /SESAME OIL/i, aliases: ['til tel', 'til ka tel'] },
+            { match: /BROWN SUGAR/i, aliases: ['shakkar'] },
+            { match: /^SUGAR \d/i, aliases: ['cheeni', 'chini'] },
+            { match: /APPLE VINEGAR/i, aliases: ['seb sirka', 'seb ka sirka'] },
+            { match: /JAMUN VINEGAR/i, aliases: ['jamun sirka', 'jamun ka sirka'] },
+            { match: /BARLEY DALIA/i, aliases: ['jau dalia'] },
+            { match: /WHITE PEAS/i, aliases: ['safed matar'] },
+            { match: /BLACK MASOOR/i, aliases: ['sabut masoor', 'kali masoor'] },
+            { match: /RAGI/i, aliases: ['mandua', 'nachni'] },
+            { match: /\bHONEY\b/i, aliases: ['shahad'] },
+            { match: /ALOEVERA JUICE|ALOE VERA JUICE/i, aliases: ['ghritkumari'] },
+            { match: /CASTOR OIL/i, aliases: ['arandi tel', 'arandi ka tel'] },
+            { match: /WHEAT GRASS/i, aliases: ['gehu jaware', 'gehu ke jaware'] },
+            { match: /HARITAKI/i, aliases: ['harad'] },
+            { match: /CAMPHOR/i, aliases: ['kapur'] },
+            { match: /SANDAL/i, aliases: ['chandan'] },
+            { match: /JASMINE/i, aliases: ['chameli'] },
+            { match: /DHOOP ROSE|ROSE SHARBAT/i, aliases: ['gulab'] },
+            { match: /CURCUMIN/i, aliases: ['haldi extract'] },
+        ];
+
+        // One lowercase blob per product: its own name + category, plus any alias words
+        // from the rules above whose pattern matches this product's real name.
+        const buildSearchIndex = (product) => {
+            let text = (product.name || '').toLowerCase() + ' ' + (product.category || '').toLowerCase();
+            for (const rule of SEARCH_ALIAS_RULES) {
+                if (rule.match.test(product.name || '')) {
+                    text += ' ' + rule.aliases.join(' ');
+                }
+            }
+            return text;
+        };
+
         const App = () => {
             const [selectedCategory, setSelectedCategory] = React.useState('All');
             const [cart, setCart] = React.useState([]);
@@ -1366,10 +1419,10 @@
             };
 
             const filteredProducts = React.useMemo(() => {
+                const q = searchTerm.trim().toLowerCase();
                 return products.filter(product => {
                     const matchesCategory = selectedCategory === 'All' || (product.category === selectedCategory);
-                    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                         (product.category && product.category.toLowerCase().includes(searchTerm.toLowerCase()));
+                    const matchesSearch = !q || buildSearchIndex(product).includes(q);
                     return matchesCategory && matchesSearch;
                 });
             }, [products, selectedCategory, searchTerm]);
@@ -1474,7 +1527,7 @@
             const dropdownMatches = React.useMemo(() => {
                 const q = productSearch.trim().toLowerCase();
                 const base = q
-                    ? products.filter(p => p.name.toLowerCase().includes(q))
+                    ? products.filter(p => buildSearchIndex(p).includes(q))
                     : products;
                 return base.slice(0, 50);
             }, [products, productSearch]);
