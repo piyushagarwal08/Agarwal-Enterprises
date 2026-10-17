@@ -89,6 +89,28 @@
         }
 
         /* Top announcement strip */
+        /* ===== TEMPORARY DIWALI TRAYS (delete with the FESTIVE block) ===== */
+        .festive-banner {
+            max-width: 1200px;
+            margin: 14px auto 4px;
+            padding: 14px 16px;
+            border-radius: 14px;
+            background: linear-gradient(120deg, #F97316 0%, #FB923C 55%, #FBBF24 100%);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            box-shadow: 0 4px 14px rgba(234,88,12,0.25);
+        }
+        .festive-banner h2 { font-size: 20px; margin-bottom: 2px; }
+        .festive-banner p { font-size: 14px; opacity: 0.95; }
+        .festive-banner button {
+            background: #fff; color: #C2410C; border: none; border-radius: 999px;
+            padding: 9px 20px; font-weight: 800; font-size: 14px; cursor: pointer;
+        }
+
         .announce-bar {
             background: linear-gradient(90deg, var(--saffron) 0%, var(--amber) 100%);
             color: #FFFFFF;
@@ -1060,6 +1082,7 @@
         // Emoji shown on each category chip (best-effort match by keyword)
         const CATEGORY_EMOJI = {
             'All': '🏪',
+            'Festive Season Offer': '🎁',
             'Ayurvedic Medicines': '🌿',
             'Body & Bath Care': '🧴',
             'Grocery & Staples': '🛒',
@@ -1173,6 +1196,20 @@
             }
             return text;
         };
+
+        /* =========================================================
+           FESTIVE SEASON OFFER (temporary)
+           The platters are normal products in Firebase (category below),
+           so edit price / stock from the admin panel or CSV as usual.
+           This block only controls the banner, the category chip and the
+           auto-hide: after FESTIVE_END the category is hidden everywhere.
+           To hide it earlier, set FESTIVE_ENABLED = false.
+           Photos live in images/<item_code>.jpg
+           ========================================================= */
+        const FESTIVE_ENABLED = true;
+        const FESTIVE_END = new Date('2026-11-09T00:00:00+05:30'); // day after Diwali (8 Nov 2026)
+        const FESTIVE_CAT = 'Festive Season Offer';
+        const festiveActive = FESTIVE_ENABLED && new Date() < FESTIVE_END;
 
         const App = () => {
             const [selectedCategory, setSelectedCategory] = React.useState('All');
@@ -1421,7 +1458,8 @@
 
             const filteredProducts = React.useMemo(() => {
                 const q = searchTerm.trim().toLowerCase();
-                return products.filter(product => {
+                const pool = festiveActive ? products : products.filter(p => p.category !== FESTIVE_CAT); // FESTIVE
+                return pool.filter(product => {
                     const matchesCategory = selectedCategory === 'All' || (product.category === selectedCategory);
                     const matchesSearch = !q || buildSearchIndex(product).includes(q);
                     return matchesCategory && matchesSearch;
@@ -1810,13 +1848,19 @@
                 }
             };
 
+            // FESTIVE: put the Diwali chip right after "All" while the season is on
+            const festiveHasItems = festiveActive && products.some(p => p.category === FESTIVE_CAT);
+            const shownCategories = festiveHasItems
+                ? ['All', FESTIVE_CAT, ...categories.filter(c => c !== 'All' && c !== FESTIVE_CAT)]
+                : categories.filter(c => c !== FESTIVE_CAT);
+
             return (
                 <div style={{ minHeight: '100vh', background: 'linear-gradient(170deg, #FFFBEB 0%, #FEF3E2 50%, #FFFFFF 100%)' }}>
                     {toast && (
                         <div className={`toast toast-${toast.type}`}>{toast.message}</div>
                     )}
                     <div className="announce-bar">
-                        🚚 Free delivery in Jagatpura &nbsp;·&nbsp; 🌿 100% Authentic Patanjali &nbsp;·&nbsp; 💬 Order on WhatsApp
+                        🚚 Free delivery in Jagatpura &nbsp;·&nbsp; 🌿 100% Authentic Patanjali &nbsp;·&nbsp; 💬 Order on WhatsApp{festiveHasItems && <> &nbsp;·&nbsp; 🪔 Festive Season Offer</>}
                     </div>
                     <div className="header">
                         <h1 onClick={handleSecretTap} style={{ userSelect: 'none', WebkitUserSelect: 'none', cursor: 'default' }}>🌿 Patanjali Mega Store (Jagatpura)</h1>
@@ -1862,7 +1906,7 @@
 
                         {!loading && (
                             <div className="categories">
-                                {categories.map(cat => (
+                                {shownCategories.map(cat => (
                                     <button
                                         key={cat}
                                         className={`category-btn ${selectedCategory === cat ? 'active' : ''}`}
@@ -1882,6 +1926,15 @@
                         <div className="no-results">Loading products...</div>
                     ) : (
                         <>
+                            {festiveHasItems && selectedCategory === 'All' && !searchTerm.trim() && (
+                                <div className="festive-banner">
+                                    <div>
+                                        <h2>🪔 Festive Season Offer</h2>
+                                        <p>Hand-packed almonds, cashews, pistachios &amp; raisins · From ₹450 onwards</p>
+                                    </div>
+                                    <button onClick={() => setSelectedCategory(FESTIVE_CAT)}>View Trays</button>
+                                </div>
+                            )}
                             <div className="products-container">
                                 {filteredProducts.length === 0 ? (
                                     <div className="no-results">

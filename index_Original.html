@@ -1,0 +1,2325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patanjali Mega Store - Authentic Products</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%2310B981'/%3E%3Cpath d='M50 20 Q65 35 60 55 Q50 70 35 60 Q25 50 30 35 Q40 20 50 20 Z' fill='%23FFFFFF' opacity='0.9'/%3E%3Ccircle cx='50' cy='50' r='5' fill='%2310B981'/%3E%3C/svg%3E" />
+    <meta name="theme-color" content="#10B981">
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone@7.24.7/babel.min.js"></script>
+    <script>
+        // Force the CLASSIC JSX runtime. Without this, newer Babel compiles JSX with the
+        // "automatic" runtime, which injects  import { jsx } from "react/jsx-runtime"  into
+        // the output. Babel then appends that as a normal <script>, and the browser throws
+        // "Cannot use import statement outside a module" (the blank-page bug). The classic
+        // runtime uses the global React.createElement instead, so no imports are emitted.
+        Babel.registerPreset('react-classic', {
+            presets: [[Babel.availablePresets['react'], { runtime: 'classic' }]]
+        });
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    
+<!-- Firebase SDK (COMPAT VERSION - works with regular script tags) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<!-- Firebase Configuration -->
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyBgP39y1Q3czsqKuc3RI0NgfSIAr8uzkIA",
+        authDomain: "pmsjagatpura.firebaseapp.com",
+        databaseURL: "https://pmsjagatpura-default-rtdb.firebaseio.com",
+        projectId: "pmsjagatpura",
+        storageBucket: "pmsjagatpura.firebasestorage.app",
+        messagingSenderId: "1024863434032",
+        appId: "1:1024863434032:web:784859d6711b5da21984f5"
+    };
+
+    try {
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        window.firebaseDb = db;
+        console.log('✅ Firebase initialized successfully - Cross-device syncing ENABLED!');
+    } catch (error) {
+        console.error('❌ Firebase error:', error);
+        window.firebaseDb = null;
+    }
+</script>
+
+    <style>
+        :root {
+            /* richer leaf green */
+            --primary-green: #16A34A;
+            --dark-green: #15803D;
+            --light-green: #DCFCE7;
+            --pale-green: #F0FDF4;
+            --sage: #78A59C;
+            --forest: #14342B;
+            --text-primary: #1F2A24;
+            --text-secondary: #586057;
+            --border: #EFE8DA;
+            /* warm cream backdrop */
+            --cream: #FFFBEB;
+            --cream-2: #FFF3E0;
+            --bg-mint: #FFF7ED;
+            --bg-sky: #FEF3E2;
+            --bg-sun: #FFFBEB;
+            --accent-lime: #22C55E;
+            /* saffron accents (Patanjali warmth) */
+            --saffron: #F97316;
+            --saffron-dark: #EA580C;
+            --saffron-light: #FFEDD5;
+            --amber: #FB923C;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        html { -webkit-tap-highlight-color: transparent; }
+
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif; 
+            background: linear-gradient(170deg, var(--cream) 0%, var(--bg-sky) 50%, #FFFFFF 100%);
+            background-attachment: fixed;
+            color: var(--text-primary);
+            font-size: 17px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Top announcement strip */
+        .announce-bar {
+            background: linear-gradient(90deg, var(--saffron) 0%, var(--amber) 100%);
+            color: #FFFFFF;
+            font-size: 13px;
+            font-weight: 600;
+            text-align: center;
+            padding: 7px 12px;
+            letter-spacing: 0.01em;
+        }
+
+        .header { 
+            background: linear-gradient(135deg, var(--primary-green) 0%, var(--dark-green) 100%); 
+            color: white; 
+            padding: 1.5rem; 
+            margin-bottom: 0;
+            box-shadow: 0 4px 14px rgba(21, 128, 61, 0.25);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* subtle saffron glow in the header corner */
+        .header::after {
+            content: "";
+            position: absolute;
+            top: -40px;
+            right: -30px;
+            width: 160px;
+            height: 160px;
+            background: radial-gradient(circle, rgba(249,115,22,0.45), transparent 70%);
+            pointer-events: none;
+        }
+
+        /* Trust badges strip under header */
+        .trust-bar {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 12px 1rem;
+            background: var(--cream);
+            border-bottom: 1px solid var(--border);
+            scrollbar-width: none;
+        }
+        .trust-bar::-webkit-scrollbar { display: none; }
+
+        .trust-chip {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+            background: #FFFFFF;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            padding: 7px 13px;
+            font-size: 12.5px;
+            font-weight: 700;
+            color: var(--dark-green);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+        .trust-chip .tc-ico { font-size: 14px; }
+
+        .header h1 { 
+            font-size: 28px; 
+            font-weight: 700; 
+            margin-bottom: 0.5rem; 
+        }
+
+        .header p { 
+            font-size: 14px; 
+            opacity: 0.95; 
+        }
+
+        .sticky-filters {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: var(--cream);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+        }
+
+        .top-nav {
+            display: flex;
+            gap: 10px;
+            padding: 1rem 1rem 0.75rem;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 200px;
+            padding: 14px 16px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 17px;
+            background: white;
+        }
+
+        .admin-btn {
+            padding: 8px 14px;
+            background: var(--primary-green);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        .admin-btn:hover {
+            background: var(--dark-green);
+        }
+
+        .admin-btn.logout {
+            background: #EF4444;
+            font-size: 12px;
+            padding: 6px 10px;
+        }
+
+        .admin-btn.logout:hover {
+            background: #DC2626;
+        }
+
+        .categories { 
+            display: flex; 
+            gap: 8px; 
+            padding: 0 1rem 1rem; 
+            overflow-x: auto; 
+            scroll-behavior: smooth; 
+        }
+
+        .category-btn { 
+            padding: 11px 20px; 
+            border: 1px solid var(--border); 
+            border-radius: 20px; 
+            background: white; 
+            color: var(--text-secondary); 
+            font-weight: 600; 
+            font-size: 16px; 
+            cursor: pointer; 
+            white-space: nowrap; 
+            transition: all 0.2s; 
+        }
+
+        .category-btn.active { 
+            background: var(--primary-green); 
+            color: white; 
+            border-color: var(--primary-green);
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3); 
+        }
+
+        .products-container { 
+            padding: 0 1rem 6rem; 
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Mobile-first: 2 per row */
+        .products-grid { 
+            display: grid; 
+            grid-template-columns: repeat(2, 1fr); 
+            gap: 12px; 
+        }
+
+        /* Larger screens: fit as many ~200px cards as the width allows.
+           The number of columns is decided by the screen size, not fixed. */
+        @media (min-width: 700px) {
+            .products-grid {
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                gap: 16px;
+            }
+        }
+
+        .product-card { 
+            background: #FFFFFF; 
+            border-radius: 14px; 
+            padding: 10px; 
+            box-shadow: 0 2px 12px rgba(20, 52, 43, 0.07), 0 1px 3px rgba(0,0,0,0.04);
+            border: 1px solid var(--border);
+            border-top: 3px solid var(--saffron);
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .product-card:active {
+            transform: scale(0.98);
+        }
+
+        /* --- Product image / placeholder --- */
+        .product-img {
+            position: relative;
+            width: clamp(82px, 32vw, 120px);
+            height: clamp(82px, 32vw, 120px);
+            margin: 0 auto 8px;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #FFFFFF;
+        }
+
+        .product-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+
+        /* Branded blank-canvas shown until a real photo is uploaded */
+        .product-img.placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            background:
+                radial-gradient(circle at 30% 25%, rgba(255,255,255,0.7), transparent 60%),
+                linear-gradient(135deg, var(--light-green) 0%, var(--saffron-light) 100%);
+        }
+
+        .product-img.placeholder .ph-leaf {
+            width: 34px;
+            height: 34px;
+            opacity: 0.85;
+        }
+
+        .product-img.placeholder .ph-label {
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: var(--dark-green);
+            opacity: 0.75;
+        }
+
+        .product-img .img-skeleton {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(100deg, #EEF2F0 30%, #F7FAF9 50%, #EEF2F0 70%);
+            background-size: 200% 100%;
+            animation: shimmer 1.2s linear infinite;
+        }
+
+        @keyframes shimmer {
+            from { background-position: 200% 0; }
+            to   { background-position: -200% 0; }
+        }
+
+        .product-card h3 { 
+            font-size: 15px; 
+            font-weight: 700; 
+            color: var(--text-primary); 
+            margin-bottom: 4px; 
+            line-height: 1.3;
+            white-space: normal;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+            text-align: center;
+        }
+
+        .product-card p { 
+            font-size: 14px; 
+            color: var(--text-secondary); 
+            margin-bottom: 6px; 
+        }
+
+        .price-info {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-bottom: 8px;
+            font-size: 12px;
+            min-height: 16px;
+        }
+
+        .mrp-price {
+            text-decoration: line-through;
+            color: var(--text-secondary);
+            font-size: 15px;
+        }
+
+        .offer-price {
+            color: var(--primary-green);
+            font-weight: 700;
+            font-size: 22px;
+        }
+
+        .cost-badge {
+            background: var(--pale-green);
+            color: var(--dark-green);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .stock-badge {
+            color: var(--text-secondary);
+        }
+
+        .product-footer { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-top: auto;
+        }
+
+        .product-price { 
+            font-size: 16px; 
+            font-weight: 700; 
+            color: var(--primary-green); 
+            margin: 0; 
+        }
+
+        .add-btn { 
+            padding: 10px 18px; 
+            background: var(--primary-green); 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            font-size: 16px; 
+            font-weight: 700; 
+            cursor: pointer; 
+            transition: background 0.2s; 
+        }
+
+        .add-btn:active {
+            background: var(--dark-green);
+        }
+
+        .add-btn:disabled {
+            background: #CCC;
+            cursor: not-allowed;
+        }
+
+        /* On-card quantity stepper (shown once a product is in the cart) */
+        .card-stepper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--pale-green);
+            border: 2px solid var(--primary-green);
+            border-radius: 8px;
+            padding: 4px;
+        }
+
+        .card-stepper button {
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: var(--primary-green);
+            color: white;
+            border-radius: 6px;
+            font-size: 24px;
+            font-weight: 700;
+            line-height: 1;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card-stepper button:active {
+            background: var(--dark-green);
+        }
+
+        .card-stepper button:disabled {
+            background: #B7E4CF;
+            cursor: not-allowed;
+        }
+
+        .card-stepper .stepper-qty {
+            min-width: 26px;
+            text-align: center;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--forest);
+        }
+
+        /* Self-closing notification toast */
+        .toast {
+            position: fixed;
+            top: 18px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 50;
+            padding: 14px 22px;
+            border-radius: 12px;
+            font-size: 17px;
+            font-weight: 700;
+            color: white;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.22);
+            max-width: 90%;
+            text-align: center;
+            animation: toastIn 0.25s ease-out;
+        }
+
+        .toast-success { background: #10B981; }
+        .toast-info    { background: #2563EB; }
+        .toast-remove  { background: #EF4444; }
+
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateX(-50%) translateY(-16px); }
+            to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+
+        .cart-fab { 
+            position: fixed; 
+            bottom: calc(1rem + env(safe-area-inset-bottom)); 
+            right: 1rem; 
+            width: 64px; 
+            height: 64px; 
+            border-radius: 50%; 
+            background: linear-gradient(135deg, var(--accent-lime) 0%, var(--dark-green) 100%); 
+            color: white; 
+            border: 3px solid #FFFFFF; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            cursor: pointer; 
+            box-shadow: 0 8px 22px rgba(5, 150, 105, 0.45); 
+            z-index: 10; 
+            transition: transform 0.15s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .cart-fab svg {
+            width: 30px;
+            height: 30px;
+            display: block;
+        }
+
+        .cart-fab:active {
+            transform: scale(0.94);
+        }
+
+        .cart-badge { 
+            position: absolute; 
+            top: -6px; 
+            right: -6px; 
+            background: #EF4444; 
+            color: white; 
+            border: 2px solid #FFFFFF;
+            border-radius: 50%; 
+            min-width: 26px; 
+            height: 26px; 
+            padding: 0 6px;
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 13px; 
+            font-weight: 800; 
+            box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+        }
+
+        .cart-panel { 
+            position: fixed; 
+            bottom: 0; 
+            left: 0; 
+            right: 0; 
+            background: white; 
+            border-top-left-radius: 20px; 
+            border-top-right-radius: 20px; 
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.15); 
+            z-index: 200; 
+            max-height: 80vh; 
+            overflow-y: auto; 
+            animation: slideUp 0.3s ease-out; 
+        }
+
+        @keyframes slideUp { 
+            from { transform: translateY(100%); } 
+            to { transform: translateY(0); } 
+        }
+
+        .cart-header { 
+            padding: 1.5rem 1rem 1rem; 
+            border-bottom: 1px solid var(--border); 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+        }
+
+        .cart-header h2 { 
+            margin: 0; 
+            font-size: 22px; 
+            font-weight: 700; 
+            color: var(--primary-green);
+        }
+
+        .close-btn { 
+            background: none; 
+            border: none; 
+            cursor: pointer; 
+            font-size: 26px; 
+        }
+
+        .cart-content { 
+            padding: 1rem; 
+        }
+
+        .cart-item { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 14px 0; 
+            border-bottom: 1px solid var(--border); 
+        }
+
+        .item-details h4 { 
+            margin: 0 0 4px; 
+            font-weight: 700; 
+            font-size: 16px; 
+        }
+
+        .item-details p { 
+            margin: 0; 
+            font-size: 14px; 
+            color: var(--text-secondary); 
+        }
+
+        .qty-controls { 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+        }
+
+        .qty-btn { 
+            width: 40px; 
+            height: 40px; 
+            border: 2px solid var(--primary-green); 
+            background: white; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-size: 22px; 
+            color: var(--primary-green);
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .qty-display { 
+            min-width: 30px; 
+            text-align: center; 
+            font-weight: 700; 
+            font-size: 18px;
+        }
+
+        .item-price { 
+            font-weight: 700; 
+            min-width: 64px; 
+            text-align: right; 
+            font-size: 17px; 
+            color: var(--primary-green);
+        }
+
+        .address-section { 
+            padding: 1rem; 
+            border-top: 1px solid var(--border); 
+        }
+
+        .address-label { 
+            display: block; 
+            font-size: 15px; 
+            font-weight: 700; 
+            color: var(--text-primary); 
+            margin-bottom: 6px; 
+        }
+
+        .address-input { 
+            width: 100%; 
+            padding: 12px; 
+            border: 2px solid var(--border); 
+            border-radius: 8px; 
+            font-size: 16px; 
+            min-height: 70px; 
+            resize: none; 
+            font-family: inherit; 
+        }
+
+        .footer { 
+            padding: 1rem; 
+            background: var(--pale-green); 
+            border-top: 1px solid var(--light-green); 
+        }
+
+        .total-line { 
+            display: flex; 
+            justify-content: space-between; 
+            margin-bottom: 12px; 
+            font-size: 18px; 
+            font-weight: 700;
+        }
+
+        .total-amount {
+            color: var(--primary-green);
+            font-size: 22px;
+        }
+
+        .footer-note { 
+            margin: 8px 0 0; 
+            font-size: 13px; 
+            color: var(--text-secondary); 
+        }
+
+        .whatsapp-btn { 
+            width: 100%; 
+            padding: 16px; 
+            background: #25D366; 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            font-weight: 700; 
+            font-size: 18px; 
+            cursor: pointer; 
+            margin-top: 12px; 
+            transition: opacity 0.2s; 
+        }
+
+        .whatsapp-btn:disabled { 
+            background: #CCC; 
+            cursor: not-allowed; 
+        }
+
+        .empty-cart { 
+            padding: 2rem 1rem; 
+            color: var(--text-secondary); 
+            text-align: center; 
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 300;
+            padding: 1rem;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-header h2 {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--primary-green);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+
+        .password-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+
+        .form-group input {
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .form-group button {
+            padding: 10px;
+            background: var(--primary-green);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .form-group button:hover {
+            background: var(--dark-green);
+        }
+
+        .upload-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .upload-section label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .file-input {
+            width: 100%;
+            padding: 10px;
+            border: 2px dashed var(--primary-green);
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .price-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+            font-size: 12px;
+        }
+
+        .price-table th {
+            background: var(--pale-green);
+            padding: 8px;
+            text-align: left;
+            font-weight: 600;
+            border: 1px solid var(--light-green);
+        }
+
+        .price-table td {
+            padding: 8px;
+            border: 1px solid var(--light-green);
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 2rem 1rem;
+            color: var(--text-secondary);
+        }
+
+        .tip-box {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #F0FDF4;
+            border-radius: 8px;
+            font-size: 12px;
+            color: #6B7280;
+        }
+
+        /* --- Single / Bulk update feature --- */
+        .mode-toggle {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 1.25rem;
+        }
+
+        .mode-toggle button {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: white;
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .mode-toggle button.active {
+            background: var(--primary-green);
+            color: white;
+            border-color: var(--primary-green);
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+        }
+
+        .combo-wrap {
+            position: relative;
+            margin-bottom: 1rem;
+        }
+
+        .combo-input {
+            width: 100%;
+            padding: 11px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .combo-list {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: calc(100% + 4px);
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            max-height: 240px;
+            overflow-y: auto;
+            z-index: 5;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+        }
+
+        .combo-item {
+            padding: 10px 12px;
+            font-size: 13px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--pale-green);
+        }
+
+        .combo-item:hover,
+        .combo-item:active {
+            background: var(--pale-green);
+        }
+
+        .combo-item .ci-cat {
+            display: block;
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        .combo-empty {
+            padding: 12px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            text-align: center;
+        }
+
+        .selected-chip {
+            background: var(--pale-green);
+            border: 1px solid var(--light-green);
+            border-radius: 8px;
+            padding: 10px 12px;
+            margin-bottom: 1rem;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--forest);
+        }
+
+        .edit-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 1rem;
+        }
+
+        .edit-field label {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .edit-field input {
+            width: 100%;
+            padding: 9px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .save-single-btn {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary-green);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .save-single-btn:hover {
+            background: var(--dark-green);
+        }
+
+        /* hide the category scrollbar but keep it swipeable */
+        .categories::-webkit-scrollbar { display: none; }
+        .categories { -ms-overflow-style: none; scrollbar-width: none; }
+
+        @media (max-width: 640px) {
+            body { font-size: 16px; }
+
+            .header {
+                padding: 1.1rem 1rem;
+            }
+
+            .header h1 {
+                font-size: 21px;
+                line-height: 1.25;
+            }
+
+            .header p { font-size: 13px; }
+
+            .top-nav {
+                flex-direction: row;
+                flex-wrap: wrap;
+                padding: 0.75rem 0.75rem 0.75rem;
+                gap: 8px;
+            }
+
+            .search-box {
+                flex: 1 1 100%;
+                font-size: 16px; /* keeps iOS from zooming on focus */
+                padding: 12px 14px;
+            }
+
+            .categories { padding: 0 0.75rem 0.75rem; }
+            .category-btn { padding: 9px 16px; font-size: 14px; }
+
+            .products-container { padding: 0 0.75rem 6rem; }
+            .products-grid { gap: 10px; }
+
+            .product-card { padding: 8px; border-radius: 12px; }
+            .product-card h3 { font-size: 14px; }
+            .offer-price { font-size: 19px; }
+
+            .add-btn { padding: 9px 14px; font-size: 15px; }
+            .card-stepper button { width: 36px; height: 36px; font-size: 22px; }
+            .card-stepper .stepper-qty { font-size: 18px; }
+
+            .modal-content { padding: 1.5rem; }
+        }
+
+        @media (max-width: 360px) {
+            .products-grid { gap: 8px; }
+            .product-card h3 { font-size: 13px; }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel" data-presets="react-classic">
+        /* =========================================================
+           PRODUCT IMAGES
+           Drop photos into the "images" folder (next to this file),
+           named by the product's item_code, e.g.
+
+               images/150000303.jpg
+
+           jpg, jpeg, png and webp all work. Until a matching file
+           exists, a clean branded placeholder is shown instead.
+           ========================================================= */
+        const IMAGE_BASE = 'images/';
+        const IMAGE_EXTS = ['jpg', 'jpeg', 'png', 'webp'];
+
+        // Emoji shown on each category chip (best-effort match by keyword)
+        const CATEGORY_EMOJI = {
+            'All': '🏪',
+            'Ayurvedic Medicines': '🌿',
+            'Body & Bath Care': '🧴',
+            'Grocery & Staples': '🛒',
+            'Hair Care': '💇',
+            'Health Supplements & Wellness': '💊',
+            'Oral Care': '🪥',
+            'Packaged Foods & Beverages': '🍪',
+            'Pooja & Household': '🪔',
+            'Skin & Face Care': '🧖',
+            'Spices & Cooking Essentials': '🌶️'
+        };
+        const catEmoji = (cat) => CATEGORY_EMOJI[cat] || '🌿';
+
+        const LeafMark = () => (
+            <svg className="ph-leaf" viewBox="0 0 100 100" fill="none" aria-hidden="true">
+                <path d="M52 12 C74 30 68 62 40 82 C26 58 28 32 52 12 Z" fill="#10B981" opacity="0.9" />
+                <path d="M51 16 C50 42 47 62 41 80" stroke="#FFFFFF" strokeWidth="3" strokeLinecap="round" opacity="0.85" />
+            </svg>
+        );
+
+        const ProductImage = ({ product }) => {
+            const code = product.item_code;
+            const [extIdx, setExtIdx] = React.useState(0);
+            const [status, setStatus] = React.useState(code ? 'loading' : 'placeholder');
+
+            React.useEffect(() => {
+                setExtIdx(0);
+                setStatus(product.item_code ? 'loading' : 'placeholder');
+            }, [product.item_code]);
+
+            if (status === 'placeholder') {
+                return (
+                    <div className="product-img placeholder">
+                        <LeafMark />
+                        <span className="ph-label">Patanjali</span>
+                    </div>
+                );
+            }
+
+            const src = IMAGE_BASE + code + '.' + IMAGE_EXTS[extIdx];
+            return (
+                <div className="product-img">
+                    <img
+                        src={src}
+                        alt={product.name}
+                        loading="lazy"
+                        onLoad={() => setStatus('loaded')}
+                        onError={() => {
+                            if (extIdx < IMAGE_EXTS.length - 1) {
+                                setExtIdx(extIdx + 1);
+                            } else {
+                                setStatus('placeholder');
+                            }
+                        }}
+                    />
+                    {status === 'loading' && <div className="img-skeleton" />}
+                </div>
+            );
+        };
+
+        // Hindi / vernacular search aliases — lets a shopper type "methi dana" or "sarson tel"
+        // and still find "FENUGREEK SEED 100 GM" or "MUSTARD OIL 1 L". The product name shown
+        // on screen is never changed; this only widens what the search box matches against.
+        // Add more rules any time — { match: /PATTERN/i, aliases: ['hindi term', ...] }.
+        const SEARCH_ALIAS_RULES = [
+            { match: /FENUGREEK SEED/i, aliases: ['methi dana', 'methi'] },
+            { match: /FENNEL WHOLE/i, aliases: ['saunf'] },
+            { match: /BLACK PEPPER/i, aliases: ['kali mirch'] },
+            { match: /CAROM SEED/i, aliases: ['ajwain'] },
+            { match: /CORIANDER POWDER/i, aliases: ['dhaniya powder', 'dhania', 'dhaniya'] },
+            { match: /CORIANDER WHOLE/i, aliases: ['sabut dhaniya', 'dhania', 'dhaniya'] },
+            { match: /CUMIN SEED/i, aliases: ['jeera'] },
+            { match: /CUMIN WHOLE/i, aliases: ['sabut jeera', 'jeera'] },
+            { match: /TURMERIC POWDER/i, aliases: ['haldi', 'haldi powder'] },
+            { match: /RED CHILLI POWDER/i, aliases: ['lal mirch', 'mirch powder', 'mirchi'] },
+            { match: /LARGE CARDAMOM/i, aliases: ['badi elaichi'] },
+            { match: /SMALL CARDAMOM/i, aliases: ['chhoti elaichi', 'elaichi'] },
+            { match: /MUSTARD OIL/i, aliases: ['sarson tel', 'sarson ka tel', 'sarso tel'] },
+            { match: /COCONUT OIL/i, aliases: ['nariyal tel', 'nariyal ka tel'] },
+            { match: /GROUNDNUT OIL/i, aliases: ['mungfali tel', 'moongfali ka tel'] },
+            { match: /SESAME OIL/i, aliases: ['til tel', 'til ka tel'] },
+            { match: /BROWN SUGAR/i, aliases: ['shakkar'] },
+            { match: /^SUGAR \d/i, aliases: ['cheeni', 'chini'] },
+            { match: /APPLE VINEGAR/i, aliases: ['seb sirka', 'seb ka sirka'] },
+            { match: /JAMUN VINEGAR/i, aliases: ['jamun sirka', 'jamun ka sirka'] },
+            { match: /BARLEY DALIA/i, aliases: ['jau dalia'] },
+            { match: /WHITE PEAS/i, aliases: ['safed matar'] },
+            { match: /BLACK MASOOR/i, aliases: ['sabut masoor', 'kali masoor'] },
+            { match: /RAGI/i, aliases: ['mandua', 'nachni'] },
+            { match: /\bHONEY\b/i, aliases: ['shahad'] },
+            { match: /ALOEVERA JUICE|ALOE VERA JUICE/i, aliases: ['ghritkumari'] },
+            { match: /CASTOR OIL/i, aliases: ['arandi tel', 'arandi ka tel'] },
+            { match: /WHEAT GRASS/i, aliases: ['gehu jaware', 'gehu ke jaware'] },
+            { match: /HARITAKI/i, aliases: ['harad'] },
+            { match: /CAMPHOR/i, aliases: ['kapur'] },
+            { match: /SANDAL/i, aliases: ['chandan'] },
+            { match: /JASMINE/i, aliases: ['chameli'] },
+            { match: /DHOOP ROSE|ROSE SHARBAT/i, aliases: ['gulab'] },
+            { match: /ASHVAGANDHA/i, aliases: ['ashvagandha','ashwagandha','aswagandha','asvagandha'] },
+            { match: /CURCUMIN/i, aliases: ['haldi extract'] },
+        ];
+
+        // One lowercase blob per product: its own name + category, plus any alias words
+        // from the rules above whose pattern matches this product's real name.
+        const buildSearchIndex = (product) => {
+            let text = (product.name || '').toLowerCase() + ' ' + (product.category || '').toLowerCase();
+            for (const rule of SEARCH_ALIAS_RULES) {
+                if (rule.match.test(product.name || '')) {
+                    text += ' ' + rule.aliases.join(' ');
+                }
+            }
+            return text;
+        };
+
+        const App = () => {
+            const [selectedCategory, setSelectedCategory] = React.useState('All');
+            const [cart, setCart] = React.useState([]);
+            const [address, setAddress] = React.useState('');
+            const [customerName, setCustomerName] = React.useState('');
+            const [toast, setToast] = React.useState(null);
+            const toastTimer = React.useRef(null);
+            const [showCart, setShowCart] = React.useState(false);
+            const [showContact, setShowContact] = React.useState(false);
+            const [showAdmin, setShowAdmin] = React.useState(false);
+            const [products, setProducts] = React.useState([]);
+            const [categories, setCategories] = React.useState(['All']);
+            const [searchTerm, setSearchTerm] = React.useState('');
+            const [loading, setLoading] = React.useState(true);
+            const [isAdminLoggedIn, setIsAdminLoggedIn] = React.useState(false);
+            const [adminPassword, setAdminPassword] = React.useState('');
+            const [showPasswordPrompt, setShowPasswordPrompt] = React.useState(false);
+            const adminTapRef = React.useRef({ count: 0, timer: null });
+
+            // --- Single / Bulk update feature state ---
+            const [updateMode, setUpdateMode] = React.useState('single'); // 'single' | 'bulk'
+            const [productSearch, setProductSearch] = React.useState('');
+            const [selectedProductId, setSelectedProductId] = React.useState(null);
+            const [dropdownOpen, setDropdownOpen] = React.useState(false);
+            const [editMrp, setEditMrp] = React.useState('');
+            const [editOfferPrice, setEditOfferPrice] = React.useState('');
+            const [editStock, setEditStock] = React.useState('');
+
+            const ADMIN_PASSWORD = 'admin123';
+
+            // The 10 canonical categories (from products.json) that must ALWAYS show as filters
+            const CANONICAL_CATEGORIES = [
+                'Ayurvedic Medicines',
+                'Body & Bath Care',
+                'Grocery & Staples',
+                'Hair Care',
+                'Health Supplements & Wellness',
+                'Oral Care',
+                'Packaged Foods & Beverages',
+                'Pooja & Household',
+                'Skin & Face Care',
+                'Spices & Cooking Essentials'
+            ];
+
+            // Build the filter list: the 10 canonical categories are always present,
+            // plus any extra categories found in the current products, sorted.
+            const mergeCats = (productsList) =>
+                [...new Set([...CANONICAL_CATEGORIES, ...productsList.map(p => p.category || 'Other')])].sort();
+
+            React.useEffect(() => {
+                const loadProducts = async () => {
+                    // Read products.json once — gives us the canonical category list AND a file fallback
+                    let canonicalCats = CANONICAL_CATEGORIES.slice();
+                    let fileProducts = [];
+                    try {
+                        const resp = await fetch('products.json?t=' + Date.now());
+                        const fileData = await resp.json();
+                        fileProducts = Array.isArray(fileData) ? fileData : (fileData.products || []);
+                        const fileCats = [...new Set(fileProducts.map(p => p.category || 'Other'))];
+                        if (fileCats.length) canonicalCats = fileCats;
+                    } catch (e) {
+                        console.log('products.json not read; using built-in category list');
+                    }
+
+                    const applyProducts = (productsList) => {
+                        setProducts(productsList);
+                        const merged = [...new Set([...canonicalCats, ...productsList.map(p => p.category || 'Other')])].sort();
+                        setCategories(['All', ...merged]);
+                    };
+                    const saveLocal = (productsList) => {
+                        localStorage.setItem('agarwal_products', JSON.stringify({
+                            products: productsList,
+                            categories: [...new Set(productsList.map(p => p.category || 'Other'))].sort()
+                        }));
+                    };
+
+                    // Ensure Firebase has the canonical categories stored (add if required) — fire & forget
+                    if (window.firebaseDb) {
+                        (async () => {
+                            try {
+                                const snap = await window.firebaseDb.ref('categories').once('value');
+                                const raw = snap.exists() ? snap.val() : [];
+                                const existing = Array.isArray(raw) ? raw : Object.values(raw || {});
+                                const merged = [...new Set([...existing, ...canonicalCats])].sort();
+                                if (merged.length !== existing.length) {
+                                    await window.firebaseDb.ref('categories').set(merged);
+                                    console.log('✅ Canonical categories added to Firebase');
+                                }
+                            } catch (e) {
+                                console.log('Category sync to Firebase skipped:', e.message);
+                            }
+                        })();
+                    }
+
+                    try {
+                        // PRIORITY 1: Firebase FIRST on every device (latest cross-device data)
+                        if (window.firebaseDb) {
+                            let fbReadOk = false, fbList = null;
+                            try {
+                                const snapshot = await new Promise((resolve, reject) => {
+                                    const timeout = setTimeout(() => reject(new Error('Firebase timeout')), 5000);
+                                    window.firebaseDb.ref('products').once('value', (snap) => {
+                                        clearTimeout(timeout);
+                                        resolve(snap);
+                                    }, (error) => {
+                                        clearTimeout(timeout);
+                                        reject(error);
+                                    });
+                                });
+                                fbReadOk = true;
+                                if (snapshot.exists()) {
+                                    const val = snapshot.val();
+                                    fbList = Array.isArray(val) ? val.filter(Boolean) : Object.values(val);
+                                }
+                            } catch (error) {
+                                console.log('Firebase read failed, will try local/file:', error.message);
+                            }
+
+                            if (fbList && fbList.length) {
+                                applyProducts(fbList);
+                                saveLocal(fbList); // keep this device's copy in sync
+                                console.log('✅ Loaded products from Firebase (latest, cross-device)');
+                                return;
+                            }
+
+                            // Firebase reachable but empty -> seed it from the file (first-run setup)
+                            if (fbReadOk && fileProducts.length) {
+                                applyProducts(fileProducts);
+                                saveLocal(fileProducts);
+                                try {
+                                    await window.firebaseDb.ref('products').set(fileProducts);
+                                    console.log('✅ Seeded Firebase from products.json');
+                                } catch (e) {
+                                    console.log('Could not seed Firebase:', e.message);
+                                }
+                                return;
+                            }
+                        }
+
+                        // PRIORITY 2: localStorage (offline / Firebase unreachable)
+                        const savedData = localStorage.getItem('agarwal_products');
+                        if (savedData) {
+                            try {
+                                const parsed = JSON.parse(savedData);
+                                const productsList = Array.isArray(parsed) ? parsed : (parsed.products || []);
+                                if (productsList.length > 0) {
+                                    applyProducts(productsList);
+                                    console.log('✅ Loaded products from local copy (Firebase unreachable)');
+                                    return;
+                                }
+                            } catch (e) {
+                                console.log('Local copy invalid, trying file');
+                            }
+                        }
+
+                        // PRIORITY 3: products.json file
+                        if (fileProducts.length) {
+                            applyProducts(fileProducts);
+                            saveLocal(fileProducts);
+                            console.log('✅ Loaded products from products.json');
+                            return;
+                        }
+                        throw new Error('No product data available from any source');
+                    } catch (error) {
+                        console.error('Error loading products:', error);
+                        alert('Products not loaded. Using sample data.');
+                        const sampleProducts = [
+                            { id: 1, name: 'PAT NUTRELA ORG OMEGA 3 6 7 9', item_code: '150000303', category: 'Health Supplements & Wellness', mrp: 551, offer_price: 499, stock: 55 },
+                            { id: 2, name: 'PAPAD KALI MIRCH - T', item_code: null, category: 'Grocery & Staples', mrp: 55, offer_price: 49, stock: 16 },
+                            { id: 3, name: 'CHANA DAL 500 GM (R1)', item_code: '150000718', category: 'Grocery & Staples', mrp: 65, offer_price: 59, stock: 6 },
+                        ];
+                        setProducts(sampleProducts);
+                        setCategories(['All', ...CANONICAL_CATEGORIES]);
+                    } finally {
+                        setLoading(false);
+                    }
+                };
+
+                loadProducts();
+
+                // KEYBOARD SHORTCUT: Win+Alt+A
+                const handleKeyPress = (e) => {
+                    if (e.metaKey && e.altKey && (e.key === 'a' || e.key === 'A')) {
+                        e.preventDefault();
+                        setShowPasswordPrompt(true);
+                        console.log('Admin shortcut triggered!');
+                    }
+                };
+                
+                window.addEventListener('keydown', handleKeyPress);
+                return () => window.removeEventListener('keydown', handleKeyPress);
+            }, []);
+
+            // Lock background scrolling while the cart panel is open so the sticky
+            // search/category bar can't creep down over the name/address fields.
+            React.useEffect(() => {
+                if (showCart) {
+                    document.body.style.overflow = 'hidden';
+                } else {
+                    document.body.style.overflow = '';
+                }
+                return () => { document.body.style.overflow = ''; };
+            }, [showCart]);
+
+            const handleAdminClick = () => {
+                if (isAdminLoggedIn) {
+                    setShowAdmin(true);
+                } else {
+                    setShowPasswordPrompt(true);
+                }
+            };
+
+            // HIDDEN ADMIN ACCESS: tap the store title 5 times within 1.5s
+            const handleSecretTap = () => {
+                const s = adminTapRef.current;
+                s.count += 1;
+                clearTimeout(s.timer);
+                s.timer = setTimeout(() => { s.count = 0; }, 1500);
+                if (s.count >= 5) {
+                    s.count = 0;
+                    clearTimeout(s.timer);
+                    handleAdminClick();
+                }
+            };
+
+            const handlePasswordSubmit = (e) => {
+                e.preventDefault();
+                if (adminPassword === ADMIN_PASSWORD) {
+                    setIsAdminLoggedIn(true);
+                    setShowAdmin(true);
+                    setShowPasswordPrompt(false);
+                    setAdminPassword('');
+                    alert('✅ Welcome! Admin panel unlocked.');
+                } else {
+                    alert('❌ Incorrect password. Try again!');
+                    setAdminPassword('');
+                }
+            };
+
+            const handleAdminLogout = () => {
+                setIsAdminLoggedIn(false);
+                setShowAdmin(false);
+                setAdminPassword('');
+            };
+
+            const filteredProducts = React.useMemo(() => {
+                const q = searchTerm.trim().toLowerCase();
+                return products.filter(product => {
+                    const matchesCategory = selectedCategory === 'All' || (product.category === selectedCategory);
+                    const matchesSearch = !q || buildSearchIndex(product).includes(q);
+                    return matchesCategory && matchesSearch;
+                });
+            }, [products, selectedCategory, searchTerm]);
+
+            // Show a small notification that closes itself after a moment
+            const shortName = (n) => (n && n.length > 26 ? n.slice(0, 26) + '…' : n);
+            const showToast = (message, type) => {
+                setToast({ message, type: type || 'success' });
+                if (toastTimer.current) clearTimeout(toastTimer.current);
+                toastTimer.current = setTimeout(() => setToast(null), 2200);
+            };
+
+            // How many of this product are currently in the cart
+            const cartQty = (id) => {
+                const item = cart.find(i => i.id === id);
+                return item ? item.qty : 0;
+            };
+
+            const addToCart = (product) => {
+                const existing = cart.find(item => item.id === product.id);
+                if (existing) {
+                    setCart(cart.map(item =>
+                        item.id === product.id ? { ...item, qty: item.qty + 1 } : item
+                    ));
+                } else {
+                    setCart([...cart, { ...product, qty: 1 }]);
+                }
+                showToast('🛒 Added: ' + shortName(product.name), 'success');
+            };
+
+            // Reduce quantity by one; removes the product when it hits zero
+            const decrementItem = (product) => {
+                const existing = cart.find(item => item.id === product.id);
+                if (!existing) return;
+                if (existing.qty <= 1) {
+                    setCart(cart.filter(item => item.id !== product.id));
+                    showToast('❌ Removed: ' + shortName(product.name), 'remove');
+                } else {
+                    setCart(cart.map(item =>
+                        item.id === product.id ? { ...item, qty: item.qty - 1 } : item
+                    ));
+                    showToast('➖ Reduced: ' + shortName(product.name), 'info');
+                }
+            };
+
+            const removeFromCart = (id) => {
+                const existing = cart.find(item => item.id === id);
+                setCart(cart.filter(item => item.id !== id));
+                if (existing) showToast('❌ Removed: ' + shortName(existing.name), 'remove');
+            };
+
+            const updateQty = (id, qty) => {
+                if (qty <= 0) {
+                    removeFromCart(id);
+                } else {
+                    setCart(cart.map(item =>
+                        item.id === id ? { ...item, qty } : item
+                    ));
+                }
+            };
+
+            const total = cart.reduce((sum, item) => sum + ((item.offer_price || item.mrp) * item.qty), 0);
+
+            const generateWhatsAppMessage = () => {
+                let message = `*Order from Patanjali Mega Store (Jagatpura)*\n\n`;
+                if (customerName) message += `*Name:* ${customerName}\n\n`;
+                cart.forEach(item => {
+                    const price = item.offer_price || item.mrp;
+                    message += `${item.name} - ₹${price} x ${item.qty} = ₹${price * item.qty}\n`;
+                });
+                message += `\n*Total: ₹${total}*\n`;
+                if (address) message += `\n*Delivery Address:*\n${address}`;
+                const encoded = encodeURIComponent(message);
+                window.open(`https://wa.me/917300076573?text=${encoded}`, '_blank');
+            };
+
+            // Shared persistence: updates state, categories, localStorage, and Firebase
+            const persistProducts = async (updatedProducts, successMsg, closeAfter) => {
+                setProducts(updatedProducts);
+                const uniqueCategories = mergeCats(updatedProducts);
+                setCategories(['All', ...uniqueCategories]);
+
+                localStorage.setItem('agarwal_products', JSON.stringify({
+                    products: updatedProducts,
+                    categories: uniqueCategories
+                }));
+
+                try {
+                    if (window.firebaseDb) {
+                        await window.firebaseDb.ref('products').set(updatedProducts);
+                        alert(successMsg + '\n\n✅ FIREBASE SYNCED!\nAll devices now see the update.\n\nTime: ' + new Date().toLocaleString());
+                    } else {
+                        alert(successMsg + '\n\n⚠️ Firebase not configured.\nSaved on this device only.');
+                    }
+                } catch (error) {
+                    alert(successMsg + '\n\n⚠️ Firebase sync failed: ' + error.message + '\nSaved on this device.');
+                }
+                if (closeAfter) setShowAdmin(false);
+            };
+
+            // Filtered matches for the searchable product dropdown
+            const dropdownMatches = React.useMemo(() => {
+                const q = productSearch.trim().toLowerCase();
+                const base = q
+                    ? products.filter(p => buildSearchIndex(p).includes(q))
+                    : products;
+                return base.slice(0, 50);
+            }, [products, productSearch]);
+
+            // Pick a product from the dropdown and pre-fill its current values
+            const selectProductForEdit = (product) => {
+                setSelectedProductId(product.id);
+                setProductSearch(product.name);
+                setDropdownOpen(false);
+                setEditMrp(product.mrp != null ? String(product.mrp) : '');
+                setEditOfferPrice(product.offer_price != null ? String(product.offer_price) : (product.mrp != null ? String(product.mrp) : ''));
+                setEditStock(product.stock != null ? String(product.stock) : '');
+            };
+
+            const resetSingleForm = () => {
+                setSelectedProductId(null);
+                setProductSearch('');
+                setEditMrp('');
+                setEditOfferPrice('');
+                setEditStock('');
+                setDropdownOpen(false);
+            };
+
+            // Save a single product's price / stock
+            const handleSingleUpdate = async () => {
+                if (!selectedProductId) {
+                    alert('Please select a product from the list first.');
+                    return;
+                }
+                const target = products.find(p => p.id === selectedProductId);
+                if (!target) {
+                    alert('Selected product could not be found. Please pick it again.');
+                    return;
+                }
+                if (editMrp === '' && editOfferPrice === '' && editStock === '') {
+                    alert('Enter a new MRP, offer price, or stock value to update.');
+                    return;
+                }
+
+                const mrpVal = editMrp === '' ? target.mrp : parseFloat(editMrp);
+                const offerVal = editOfferPrice === '' ? (target.offer_price != null ? target.offer_price : target.mrp) : parseFloat(editOfferPrice);
+                const stockVal = editStock === '' ? target.stock : parseInt(editStock, 10);
+
+                if ((editMrp !== '' && (isNaN(mrpVal) || mrpVal < 0)) ||
+                    (editOfferPrice !== '' && (isNaN(offerVal) || offerVal < 0)) ||
+                    (editStock !== '' && (isNaN(stockVal) || stockVal < 0))) {
+                    alert('Please enter valid, non-negative numbers.');
+                    return;
+                }
+
+                const updatedProducts = products.map(p =>
+                    p.id === selectedProductId
+                        ? { ...p, mrp: mrpVal, offer_price: offerVal, stock: stockVal }
+                        : p
+                );
+
+                await persistProducts(
+                    updatedProducts,
+                    `✅ Updated "${target.name}"${target.item_code ? ' (Code ' + target.item_code + ')' : ''}\n\nMRP: ₹${mrpVal}\nOffer Price: ₹${offerVal}\nStock: ${stockVal} units`,
+                    false // keep panel open so you can update more products
+                );
+                resetSingleForm();
+            };
+
+            const handleCSVUpload = (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+                // allow re-uploading the same file later
+                const inputEl = event.target;
+
+                Papa.parse(file, {
+                    header: true,
+                    skipEmptyLines: true,
+                    transformHeader: (h) => String(h || '').trim().toLowerCase(),
+                    complete: (results) => {
+                        const norm = (v) => (v == null ? '' : String(v).trim());
+                        // A CSV value is "provided" only if it's a non-empty string.
+                        // Missing/blank => keep the product's existing (Firebase/local) value.
+                        const has = (v) => norm(v) !== '';
+                        const numOrKeep = (v, fallback, asInt) => {
+                            if (!has(v)) return fallback;
+                            const n = asInt ? parseInt(v, 10) : parseFloat(v);
+                            return (isNaN(n) || n < 0) ? fallback : n;
+                        };
+
+                        const rows = (results.data || []).filter(r => r && has(r.item_code));
+                        if (rows.length === 0) {
+                            alert('No usable rows found.\n\nThe CSV must include an "item_code" column with values.\nExpected columns: item_code, name, category, mrp, offer_price, stock');
+                            if (inputEl) inputEl.value = '';
+                            return;
+                        }
+
+                        // Index current products by item_code for O(1) lookup
+                        const productByCode = new Map();
+                        products.forEach(p => {
+                            const c = norm(p.item_code);
+                            if (c) productByCode.set(c, p);
+                        });
+
+                        // Build the set of codes we successfully updated
+                        const updatesByCode = new Map(); // code -> merged product
+                        const matchedCodes = [];
+                        const unmatchedRows = []; // { code, name }
+
+                        rows.forEach(row => {
+                            const code = norm(row.item_code);
+                            const product = productByCode.get(code);
+                            if (!product) {
+                                unmatchedRows.push({ code, name: norm(row.name) });
+                                return;
+                            }
+                            // Missing CSV fields fall back to the product's existing values
+                            const merged = {
+                                ...product,
+                                name: has(row.name) ? norm(row.name) : product.name,
+                                category: has(row.category) ? norm(row.category) : product.category,
+                                mrp: numOrKeep(row.mrp, product.mrp, false),
+                                offer_price: numOrKeep(row.offer_price, (product.offer_price != null ? product.offer_price : product.mrp), false),
+                                stock: numOrKeep(row.stock, product.stock, true)
+                            };
+                            updatesByCode.set(code, merged);
+                            matchedCodes.push(code);
+                        });
+
+                        const updatedCount = updatesByCode.size;
+
+                        if (updatedCount === 0) {
+                            const preview = unmatchedRows.slice(0, 30)
+                                .map(u => `• ${u.code}${u.name ? ' (' + u.name + ')' : ''}`).join('\n');
+                            alert(`❌ No products were updated.\n\nNone of the ${unmatchedRows.length} item_code(s) in the CSV matched a product.\n\nUnmatched item codes:\n${preview}${unmatchedRows.length > 30 ? `\n…and ${unmatchedRows.length - 30} more` : ''}`);
+                            if (inputEl) inputEl.value = '';
+                            return;
+                        }
+
+                        const updatedProducts = products.map(p => {
+                            const c = norm(p.item_code);
+                            return (c && updatesByCode.has(c)) ? updatesByCode.get(c) : p;
+                        });
+
+                        setProducts(updatedProducts);
+
+                        const uniqueCategories = mergeCats(updatedProducts);
+                        setCategories(['All', ...uniqueCategories]);
+                        setSelectedCategory('All');
+
+                        localStorage.setItem('agarwal_products', JSON.stringify({
+                            products: updatedProducts,
+                            categories: uniqueCategories
+                        }));
+
+                        // Build the "not updated" report for the user
+                        const buildReport = () => {
+                            if (unmatchedRows.length === 0) return '';
+                            const preview = unmatchedRows.slice(0, 25)
+                                .map(u => `• ${u.code}${u.name ? ' (' + u.name + ')' : ''}`).join('\n');
+                            return `\n\n⚠️ ${unmatchedRows.length} row(s) were NOT updated — their item_code did not match any product:\n${preview}${unmatchedRows.length > 25 ? `\n…and ${unmatchedRows.length - 25} more` : ''}`;
+                        };
+
+                        const saveToFirebase = async () => {
+                            const report = buildReport();
+                            try {
+                                if (window.firebaseDb) {
+                                    await window.firebaseDb.ref('products').set(updatedProducts);
+                                    alert(`✅ Updated ${updatedCount} product(s)!\n\n✅ FIREBASE SYNCED — all devices now see the new prices/stock.\nTime: ${new Date().toLocaleString()}${report}`);
+                                } else {
+                                    alert(`✅ Updated ${updatedCount} product(s) locally!\n\n⚠️ Firebase not configured — saved on this device only.${report}`);
+                                }
+                            } catch (error) {
+                                alert(`✅ Updated ${updatedCount} product(s) locally!\n\n⚠️ Firebase sync failed: ${error.message}\nSaved in this browser.${report}`);
+                            }
+                            if (inputEl) inputEl.value = '';
+                            // keep the admin panel open if there were unmatched rows so the user can act on them
+                            if (unmatchedRows.length === 0) setShowAdmin(false);
+                        };
+
+                        saveToFirebase();
+                    },
+                    error: (err) => {
+                        alert('Error parsing CSV: ' + err.message);
+                        if (inputEl) inputEl.value = '';
+                    }
+                });
+            };
+
+            // REFRESH LATEST: loads the most recent SAVED data (includes CSV rate updates).
+            // Priority: Firebase (latest, cross-device) -> localStorage -> products.json (only if nothing saved yet)
+            const handleRefreshLatest = async () => {
+                const applyList = (productsList, sourceLabel) => {
+                    const uniqueCategories = mergeCats(productsList);
+                    setProducts(productsList);
+                    setCategories(['All', ...uniqueCategories]);
+                    setSelectedCategory('All');
+                    localStorage.setItem('agarwal_products', JSON.stringify({
+                        products: productsList,
+                        categories: uniqueCategories
+                    }));
+                    alert(`✅ Loaded ${productsList.length} products (latest data from ${sourceLabel}).\n\nCategories: ${uniqueCategories.length}`);
+                    setShowAdmin(false);
+                };
+
+                try {
+                    // Step 1: Firebase = the latest cross-device data, including CSV rate updates
+                    if (window.firebaseDb) {
+                        try {
+                            const snapshot = await new Promise((resolve, reject) => {
+                                const timeout = setTimeout(() => reject(new Error('Firebase timeout')), 5000);
+                                window.firebaseDb.ref('products').once('value', (snap) => {
+                                    clearTimeout(timeout); resolve(snap);
+                                }, (error) => { clearTimeout(timeout); reject(error); });
+                            });
+                            if (snapshot.exists()) {
+                                const val = snapshot.val();
+                                const arr = Array.isArray(val) ? val.filter(Boolean) : Object.values(val);
+                                if (arr.length) { applyList(arr, 'Firebase (synced)'); return; }
+                            }
+                        } catch (e) {
+                            console.log('Firebase refresh failed, trying localStorage:', e.message);
+                        }
+                    }
+
+                    // Step 2: localStorage = latest data saved on this device
+                    const saved = localStorage.getItem('agarwal_products');
+                    if (saved) {
+                        try {
+                            const parsed = JSON.parse(saved);
+                            const productsList = Array.isArray(parsed) ? parsed : (parsed.products || []);
+                            if (productsList.length) { applyList(productsList, 'this device'); return; }
+                        } catch (e) { /* fall through */ }
+                    }
+
+                    // Step 3: Fallback: original file (only when nothing has ever been saved)
+                    const response = await fetch('products.json?t=' + Date.now());
+                    const data = await response.json();
+                    const productsList = Array.isArray(data) ? data : (data.products || []);
+                    if (!productsList.length) { alert('❌ No saved data found and products.json is empty.'); return; }
+                    applyList(productsList, 'products.json file');
+                } catch (err) {
+                    alert('❌ Could not refresh data: ' + err.message);
+                }
+            };
+
+            // RELOAD FROM FILE: clears cached data and reloads products.json, then re-syncs
+            const handleReloadFromFile = async () => {
+                if (!window.confirm('⚠️ Reset to the ORIGINAL products.json?\n\nThis DISCARDS all CSV rate updates and single edits, overwriting both this device and Firebase with the original file.\n\nOnly use this to recover from corrupted data.')) {
+                    return;
+                }
+                try {
+                    const response = await fetch('products.json?t=' + Date.now()); // cache-bust
+                    const data = await response.json();
+                    const productsList = Array.isArray(data) ? data : (data.products || []);
+                    if (!productsList.length) {
+                        alert('❌ products.json is empty or could not be read.');
+                        return;
+                    }
+                    const uniqueCategories = mergeCats(productsList);
+
+                    setProducts(productsList);
+                    setCategories(['All', ...uniqueCategories]);
+                    setSelectedCategory('All');
+
+                    localStorage.setItem('agarwal_products', JSON.stringify({
+                        products: productsList,
+                        categories: uniqueCategories
+                    }));
+
+                    if (window.firebaseDb) {
+                        try {
+                            await window.firebaseDb.ref('products').set(productsList);
+                            alert(`✅ Reloaded ${productsList.length} products from file!\n\n✅ Synced to Firebase — all devices updated.\n\nCategories now: ${uniqueCategories.length}`);
+                        } catch (err) {
+                            alert(`✅ Reloaded ${productsList.length} products locally!\n\n⚠️ Firebase sync failed: ${err.message}\nChanges saved in this browser.`);
+                        }
+                    } else {
+                        alert(`✅ Reloaded ${productsList.length} products from file (saved locally).\n\nCategories now: ${uniqueCategories.length}`);
+                    }
+                    setShowAdmin(false);
+                } catch (err) {
+                    alert('❌ Could not load products.json: ' + err.message);
+                }
+            };
+
+            return (
+                <div style={{ minHeight: '100vh', background: 'linear-gradient(170deg, #FFFBEB 0%, #FEF3E2 50%, #FFFFFF 100%)' }}>
+                    {toast && (
+                        <div className={`toast toast-${toast.type}`}>{toast.message}</div>
+                    )}
+                    <div className="announce-bar">
+                        🚚 Free delivery in Jagatpura &nbsp;·&nbsp; 🌿 100% Authentic Patanjali &nbsp;·&nbsp; 💬 Order on WhatsApp
+                    </div>
+                    <div className="header">
+                        <h1 onClick={handleSecretTap} style={{ userSelect: 'none', WebkitUserSelect: 'none', cursor: 'default' }}>🌿 Patanjali Mega Store (Jagatpura)</h1>
+                        <p>Khasra No. 500/356 (Middle), Near KS Petrol Pump,</p>
+                        <p>Near Mahima City Ville, Karolan Ka Barh, Jagatpura, Jaipur - 302017</p>
+                        <p style={{ marginTop: '0.5rem', fontStyle: 'italic', fontWeight: '500' }}>Prakriti Ka Aashirwad 🌿 — Authentic Patanjali Products, Delivered with Trust.</p>
+                        <button
+                            onClick={() => setShowContact(true)}
+                            style={{ marginTop: '0.9rem', background: '#fff', color: '#15803D', border: 'none', padding: '0.6rem 1.5rem', borderRadius: '8px', fontWeight: 700, fontSize: '15px', cursor: 'pointer', boxShadow: '0 2px 6px rgba(0,0,0,0.15)' }}
+                        >
+                            📞 Contact Us
+                        </button>
+                    </div>
+
+                    <div className="trust-bar">
+                        <span className="trust-chip"><span className="tc-ico">✅</span>{products.length || ''} Products</span>
+                        <span className="trust-chip"><span className="tc-ico">💯</span>100% Genuine</span>
+                        <span className="trust-chip"><span className="tc-ico">📦</span>Fresh Daily Stock</span>
+                        <span className="trust-chip"><span className="tc-ico">🚚</span>Free Local Delivery</span>
+                        <span className="trust-chip"><span className="tc-ico">💬</span>WhatsApp Orders</span>
+                    </div>
+
+                    <div className="sticky-filters">
+                        <div className="top-nav">
+                            <input
+                                type="text"
+                                className="search-box"
+                                placeholder="🔍 Search products..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                            {isAdminLoggedIn && (
+                                <button className="admin-btn" onClick={handleAdminClick}>
+                                    ⚙️ Update Prices
+                                </button>
+                            )}
+                            {isAdminLoggedIn && (
+                                <button className="admin-btn logout" onClick={handleAdminLogout}>
+                                    Logout
+                                </button>
+                            )}
+                        </div>
+
+                        {!loading && (
+                            <div className="categories">
+                                {categories.map(cat => (
+                                    <button
+                                        key={cat}
+                                        className={`category-btn ${selectedCategory === cat ? 'active' : ''}`}
+                                        onClick={() => {
+                                            setSelectedCategory(cat);
+                                            setSearchTerm('');
+                                        }}
+                                    >
+                                        {catEmoji(cat)} {cat}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    {loading ? (
+                        <div className="no-results">Loading products...</div>
+                    ) : (
+                        <>
+                            <div className="products-container">
+                                {filteredProducts.length === 0 ? (
+                                    <div className="no-results">
+                                        <p>No products found matching your search.</p>
+                                    </div>
+                                ) : (
+                                    <div className="products-grid">
+                                        {filteredProducts.map(product => {
+                                            const offerPrice = product.offer_price || product.mrp;
+                                            const showDiscount = offerPrice !== product.mrp;
+                                            const qtyInCart = cartQty(product.id);
+                                            
+                                            return (
+                                            <div key={product.id} className="product-card">
+                                                <ProductImage product={product} />
+                                                <h3>{product.name}</h3>
+                                                <div className="price-info">
+                                                    {showDiscount ? (
+                                                        <span className="mrp-price">MRP: ₹{product.mrp}</span>
+                                                    ) : (
+                                                        <span></span>
+                                                    )}
+                                                   
+                                                </div>
+                                                <div className="product-footer">
+                                                    {showDiscount ? (
+                                                        <p className="offer-price">₹{offerPrice}</p>
+                                                    ) : (
+                                                        <p className="offer-price">₹{product.mrp}</p>
+                                                    )}
+                                                    {qtyInCart >= 1 ? (
+                                                        <div className="card-stepper">
+                                                            <button
+                                                                onClick={() => decrementItem(product)}
+                                                                aria-label="Remove one"
+                                                            >−</button>
+                                                            <span className="stepper-qty">{qtyInCart}</span>
+                                                            <button
+                                                                onClick={() => addToCart(product)}
+                                                                disabled={product.stock != null && qtyInCart >= product.stock}
+                                                                aria-label="Add one"
+                                                            >+</button>
+                                                        </div>
+                                                    ) : (
+                                                        <button 
+                                                            className="add-btn" 
+                                                            onClick={() => addToCart(product)}
+                                                            disabled={product.stock === 0}
+                                                        >
+                                                            Add +
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* STORE LOCATION MAP */}
+                            <div style={{ maxWidth: '1200px', margin: '2.5rem auto 2rem', padding: '0 1rem' }}>
+                                <h2 style={{ textAlign: 'center', color: '#1F2937', marginBottom: '0.4rem' }}>📍 Visit Our Store</h2>
+                                <p style={{ textAlign: 'center', color: '#6B7280', marginBottom: '1rem', fontSize: '14px' }}>
+                                    Khasra No. 500/356 (Middle), Near KS Petrol Pump, Karolan Ka Barh, Jagatpura, Jaipur - 302017
+                                </p>
+                                <div style={{ borderRadius: '12px', overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.12)' }}>
+                                    <iframe
+                                        title="Patanjali Mega Store location"
+                                        src="https://maps.google.com/maps?q=26.8006801,75.8918101&z=16&hl=en&output=embed"
+                                        width="100%"
+                                        height="320"
+                                        style={{ border: 0, display: 'block' }}
+                                        loading="lazy"
+                                        allowFullScreen
+                                        referrerPolicy="no-referrer-when-downgrade"
+                                    ></iframe>
+                                </div>
+                                <div style={{ textAlign: 'center', marginTop: '1rem' }}>
+                                    <a
+                                        href="https://www.google.com/maps/dir/?api=1&destination=26.8006801,75.8918101"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        style={{ display: 'inline-block', background: '#10B981', color: '#fff', padding: '0.7rem 1.6rem', borderRadius: '8px', textDecoration: 'none', fontWeight: 600 }}
+                                    >
+                                        🧭 Get Directions
+                                    </a>
+                                </div>
+                            </div>
+                        </>
+                    )}
+
+                    {cart.length > 0 && (
+                        <button className="cart-fab" onClick={() => setShowCart(!showCart)} aria-label="Open cart">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <circle cx="9" cy="20" r="1.6" fill="#FFFFFF" stroke="none" />
+                                <circle cx="18" cy="20" r="1.6" fill="#FFFFFF" stroke="none" />
+                                <path d="M2 3h3l2.2 11.2a1.6 1.6 0 0 0 1.6 1.3h8.4a1.6 1.6 0 0 0 1.6-1.3L21.5 7H6" />
+                            </svg>
+                            <span className="cart-badge">{cart.length}</span>
+                        </button>
+                    )}
+
+                    {showContact && (
+                        <div className="modal-overlay" onClick={() => setShowContact(false)}>
+                            <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '380px' }}>
+                                <div className="modal-header">
+                                    <h2>Contact Us</h2>
+                                    <button className="modal-close" onClick={() => setShowContact(false)}>✕</button>
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', padding: '0.5rem 0 0.25rem' }}>
+                                    <a
+                                        href="tel:7300076573"
+                                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', background: '#10B981', color: '#fff', padding: '0.95rem', borderRadius: '8px', textDecoration: 'none', fontWeight: 600, fontSize: '16px' }}
+                                    >
+                                        📞 Call 7300076573
+                                    </a>
+                                    <a
+                                        href="https://wa.me/917300076573?text=Hi%2C%20I%20have%20a%20query%20about%20your%20products."
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', background: '#25D366', color: '#fff', padding: '0.95rem', borderRadius: '8px', textDecoration: 'none', fontWeight: 600, fontSize: '16px' }}
+                                    >
+                                        💬 WhatsApp Us
+                                    </a>
+                                    <a
+                                        href="https://www.google.com/maps/dir/?api=1&destination=26.8006801,75.8918101"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', background: '#fff', color: '#10B981', border: '2px solid #10B981', padding: '0.95rem', borderRadius: '8px', textDecoration: 'none', fontWeight: 600, fontSize: '16px' }}
+                                    >
+                                        🧭 Get Directions
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {showCart && (
+                        <div className="cart-panel">
+                            <div className="cart-header">
+                                <h2>Your Order</h2>
+                                <button className="close-btn" onClick={() => setShowCart(false)}>✕</button>
+                            </div>
+
+                            {cart.length === 0 ? (
+                                <p className="empty-cart">Cart is empty</p>
+                            ) : (
+                                <>
+                                    <div className="cart-content">
+                                        {cart.map(item => {
+                                            const offerPrice = item.offer_price || item.mrp;
+                                            return (
+                                            <div key={item.id} className="cart-item">
+                                                <div className="item-details">
+                                                    <h4>{item.name}</h4>
+                                                    <p>₹{offerPrice} each</p>
+                                                </div>
+                                                <div className="qty-controls">
+                                                    <button className="qty-btn" onClick={() => decrementItem(item)}>−</button>
+                                                    <span className="qty-display">{item.qty}</span>
+                                                    <button className="qty-btn" onClick={() => addToCart(item)}>+</button>
+                                                    <p className="item-price">₹{offerPrice * item.qty}</p>
+                                                </div>
+                                            </div>
+                                            );
+                                        })}
+                                    </div>
+
+                                    <div className="address-section">
+                                        <label className="address-label">Your Name</label>
+                                        <input
+                                            type="text"
+                                            className="address-input"
+                                            style={{ minHeight: 'auto' }}
+                                            value={customerName}
+                                            onChange={(e) => setCustomerName(e.target.value)}
+                                            placeholder="Enter your name..."
+                                        />
+                                    </div>
+
+                                    <div className="address-section">
+                                        <label className="address-label">Delivery Address</label>
+                                        <textarea
+                                            className="address-input"
+                                            value={address}
+                                            onChange={(e) => setAddress(e.target.value)}
+                                            placeholder="Enter your full address..."
+                                        />
+                                    </div>
+
+                                    <div className="footer">
+                                        <div className="total-line">
+                                            <span>Total:</span>
+                                            <span className="total-amount">₹{total}</span>
+                                        </div>
+                                        <p className="footer-note">💬 Order confirmation will come via WhatsApp</p>
+                                        <button
+                                            className="whatsapp-btn"
+                                            onClick={generateWhatsAppMessage}
+                                            disabled={!customerName.trim() || !address.trim()}
+                                        >
+                                            📱 Order via WhatsApp
+                                        </button>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    )}
+
+                    {showPasswordPrompt && (
+                        <div className="modal-overlay" onClick={() => setShowPasswordPrompt(false)}>
+                            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                                <div className="modal-header">
+                                    <h2>🔒 Admin Login</h2>
+                                    <button className="modal-close" onClick={() => setShowPasswordPrompt(false)}>✕</button>
+                                </div>
+
+                                <form onSubmit={handlePasswordSubmit} className="password-form">
+                                    <div className="form-group">
+                                        <label>Admin Password:</label>
+                                        <input
+                                            type="password"
+                                            value={adminPassword}
+                                            onChange={(e) => setAdminPassword(e.target.value)}
+                                            placeholder="Enter your admin password"
+                                            autoFocus
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <button type="submit">Unlock Admin Panel</button>
+                                    </div>
+                                </form>
+
+                                <div className="tip-box">
+                                    <strong>💡 Tip:</strong> Keyboard Shortcut: Win + Alt + A
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {showAdmin && isAdminLoggedIn && (
+                        <div className="modal-overlay" onClick={() => setShowAdmin(false)}>
+                            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                                <div className="modal-header">
+                                    <h2>Update Prices & Stock</h2>
+                                    <button className="modal-close" onClick={() => setShowAdmin(false)}>✕</button>
+                                </div>
+
+                                <div className="mode-toggle">
+                                    <button
+                                        className={updateMode === 'single' ? 'active' : ''}
+                                        onClick={() => { setUpdateMode('single'); }}
+                                    >
+                                        ✏️ Single Update
+                                    </button>
+                                    <button
+                                        className={updateMode === 'bulk' ? 'active' : ''}
+                                        onClick={() => { setUpdateMode('bulk'); setDropdownOpen(false); }}
+                                    >
+                                        📦 Bulk Update (CSV)
+                                    </button>
+                                </div>
+
+                                {updateMode === 'single' && (
+                                    <div className="upload-section">
+                                        <label>Select a product</label>
+                                        <p style={{ fontSize: '12px', color: '#6B7280', marginBottom: '8px' }}>
+                                            Type to search, tap a product, then update its price and/or stock.
+                                        </p>
+
+                                        <div className="combo-wrap">
+                                            <input
+                                                type="text"
+                                                className="combo-input"
+                                                placeholder="🔍 Search products..."
+                                                value={productSearch}
+                                                onFocus={() => setDropdownOpen(true)}
+                                                onBlur={() => setTimeout(() => setDropdownOpen(false), 150)}
+                                                onChange={(e) => {
+                                                    setProductSearch(e.target.value);
+                                                    setSelectedProductId(null);
+                                                    setDropdownOpen(true);
+                                                }}
+                                            />
+                                            {dropdownOpen && (
+                                                <div className="combo-list">
+                                                    {dropdownMatches.length === 0 ? (
+                                                        <div className="combo-empty">No products match "{productSearch}"</div>
+                                                    ) : (
+                                                        dropdownMatches.map(p => (
+                                                            <div
+                                                                key={p.id}
+                                                                className="combo-item"
+                                                                onMouseDown={(e) => { e.preventDefault(); selectProductForEdit(p); }}
+                                                            >
+                                                                {p.name}
+                                                                <span className="ci-cat">{p.category || 'Other'} · {p.item_code ? 'Code ' + p.item_code + ' · ' : ''}₹{p.offer_price || p.mrp} · {p.stock} in stock</span>
+                                                            </div>
+                                                        ))
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {selectedProductId && (
+                                            <>
+                                                <div className="selected-chip">
+                                                    ✅ {products.find(p => p.id === selectedProductId)?.name}
+                                                    {products.find(p => p.id === selectedProductId)?.item_code
+                                                        ? ' · Code ' + products.find(p => p.id === selectedProductId).item_code
+                                                        : ''}
+                                                </div>
+
+                                                <div className="edit-grid">
+                                                    <div className="edit-field">
+                                                        <label>MRP (₹)</label>
+                                                        <input
+                                                            type="number"
+                                                            inputMode="decimal"
+                                                            value={editMrp}
+                                                            onChange={(e) => setEditMrp(e.target.value)}
+                                                        />
+                                                    </div>
+                                                    <div className="edit-field">
+                                                        <label>Offer (₹)</label>
+                                                        <input
+                                                            type="number"
+                                                            inputMode="decimal"
+                                                            value={editOfferPrice}
+                                                            onChange={(e) => setEditOfferPrice(e.target.value)}
+                                                        />
+                                                    </div>
+                                                    <div className="edit-field">
+                                                        <label>Stock</label>
+                                                        <input
+                                                            type="number"
+                                                            inputMode="numeric"
+                                                            value={editStock}
+                                                            onChange={(e) => setEditStock(e.target.value)}
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                <button className="save-single-btn" onClick={handleSingleUpdate}>
+                                                    💾 Save Update
+                                                </button>
+                                                <button
+                                                    className="admin-btn"
+                                                    style={{ width: '100%', marginTop: '8px', background: '#9CA3AF' }}
+                                                    onClick={resetSingleForm}
+                                                >
+                                                    Cancel
+                                                </button>
+                                            </>
+                                        )}
+                                    </div>
+                                )}
+
+                                {updateMode === 'bulk' && (
+                                    <>
+                                        <div className="upload-section">
+                                            <label>Upload CSV with Price & Stock Updates</label>
+                                            <p style={{ fontSize: '12px', color: '#6B7280', marginBottom: '8px' }}>
+                                                Columns: <b>item_code</b>, name, category, mrp, offer_price, stock.<br/>
+                                                Rows are matched to products by <b>item_code</b>. Any blank cell keeps the product's existing value (from Firebase). Item codes that don't match a product are reported as "not updated".
+                                            </p>
+                                            <input
+                                                type="file"
+                                                accept=".csv"
+                                                className="file-input"
+                                                onChange={handleCSVUpload}
+                                            />
+                                        </div>
+
+                                        <div className="upload-section" style={{ marginTop: '1rem' }}>
+                                            <label>Refresh Latest Data</label>
+                                            <p style={{ fontSize: '12px', color: '#6B7280', marginBottom: '8px' }}>
+                                                Reloads the most recent saved data — including your latest CSV rate updates — from Firebase, syncing this device with the newest prices and stock.
+                                            </p>
+                                            <button className="admin-btn" style={{ width: '100%' }} onClick={handleRefreshLatest}>
+                                                🔄 Refresh Latest Data
+                                            </button>
+                                        </div>
+
+                                        <div className="upload-section" style={{ marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px dashed #E5E7EB' }}>
+                                            <label style={{ color: '#B91C1C' }}>Danger: Reset to Original File</label>
+                                            <p style={{ fontSize: '12px', color: '#6B7280', marginBottom: '8px' }}>
+                                                Discards ALL CSV updates and single edits, restoring the original products.json on every device. Use only to recover from corrupted data.
+                                            </p>
+                                            <button
+                                                className="admin-btn"
+                                                style={{ width: '100%', background: '#EF4444' }}
+                                                onClick={handleReloadFromFile}
+                                            >
+                                                ♻️ Reset to original products.json
+                                            </button>
+                                        </div>
+                                    </>
+                                )}
+
+                                <div>
+                                    <h3 style={{ fontSize: '16px', marginTop: '1.5rem', marginBottom: '1rem', color: '#1F2937' }}>
+                                        Current Prices & Stock ({products.length} products)
+                                    </h3>
+                                    <table className="price-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Product</th>
+                                                <th>MRP</th>
+                                                <th>Offer Price</th>
+                                                <th>Stock</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {products.slice(0, 20).map(product => (
+                                                <tr key={product.id}>
+                                                    <td style={{ fontSize: '11px' }}>{product.name.substring(0, 20)}...</td>
+                                                    <td>₹{product.mrp}</td>
+                                                    <td>₹{product.offer_price || product.mrp}</td>
+                                                    <td>{product.stock} units</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                    <p style={{ fontSize: '12px', color: '#6B7280', marginTop: '1rem', textAlign: 'center' }}>
+                                        Showing first 20 of {products.length} products
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
