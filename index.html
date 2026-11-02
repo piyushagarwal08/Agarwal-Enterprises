@@ -1464,7 +1464,9 @@
                     const matchesSearch = !q || buildSearchIndex(product).includes(q);
                     return matchesCategory && matchesSearch;
                 });
-                // Festive Season Offer products always come first (stable: other order is kept)
+                // While searching, show results in their natural order (no festive pinning)
+                if (q) return matched;
+                // Otherwise Festive Season Offer products come first (stable: other order is kept)
                 const festive = matched.filter(p => p.category === FESTIVE_CAT);
                 const rest = matched.filter(p => p.category !== FESTIVE_CAT);
                 return [...festive, ...rest];
