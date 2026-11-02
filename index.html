@@ -1459,11 +1459,15 @@
             const filteredProducts = React.useMemo(() => {
                 const q = searchTerm.trim().toLowerCase();
                 const pool = festiveActive ? products : products.filter(p => p.category !== FESTIVE_CAT); // FESTIVE
-                return pool.filter(product => {
+                const matched = pool.filter(product => {
                     const matchesCategory = selectedCategory === 'All' || (product.category === selectedCategory);
                     const matchesSearch = !q || buildSearchIndex(product).includes(q);
                     return matchesCategory && matchesSearch;
                 });
+                // Festive Season Offer products always come first (stable: other order is kept)
+                const festive = matched.filter(p => p.category === FESTIVE_CAT);
+                const rest = matched.filter(p => p.category !== FESTIVE_CAT);
+                return [...festive, ...rest];
             }, [products, selectedCategory, searchTerm]);
 
             // Show a small notification that closes itself after a moment
@@ -1932,7 +1936,7 @@
                                         <h2>🪔 Festive Season Offer</h2>
                                         <p>Hand-packed almonds, cashews, pistachios &amp; raisins · From ₹450 onwards</p>
                                     </div>
-                                    <button onClick={() => setSelectedCategory(FESTIVE_CAT)}>View Trays</button>
+                                    <button onClick={() => setSelectedCategory(FESTIVE_CAT)}>View Platters</button>
                                 </div>
                             )}
                             <div className="products-container">
